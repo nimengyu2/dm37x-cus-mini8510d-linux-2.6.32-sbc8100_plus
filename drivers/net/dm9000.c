@@ -31,6 +31,7 @@
 #include <linux/ethtool.h>
 #include <linux/dm9000.h>
 #include <linux/delay.h>
+#define DEBUG    1 
 #include <linux/platform_device.h>
 #include <linux/irq.h>
 
@@ -39,6 +40,7 @@
 #include <asm/io.h>
 
 #include "dm9000.h"
+#include <linux/lierda_debug.h>
 
 /* Board/System/Debug information/definition ---------------- */
 
@@ -53,7 +55,9 @@
 static int watchdog = 5000;
 module_param(watchdog, int, 0400);
 MODULE_PARM_DESC(watchdog, "transmit timeout in milliseconds");
-static unsigned char mac_addr[6] = {0x00,0x11,0x22,0x33,0x44,0x55};//embest
+// 5C-26-0A-17-D1-73
+static unsigned char mac_addr[6] = {0x5C,0x26,0x0A,0x17,0xD1,0x75};//embest
+//static unsigned char mac_addr[6] = {0x00,0x11,0x22,0x33,0x44,0x55};//embest
 /* DM9000 register address locking.
  *
  * The DM9000 uses an address register to control where data written
@@ -137,11 +141,17 @@ typedef struct board_info {
 
 /* debug code */
 
+#if 0
 #define dm9000_dbg(db, lev, msg...) do {		\
 	if ((lev) < CONFIG_DM9000_DEBUGLEVEL &&		\
 	    (lev) < db->debug_level) {			\
 		dev_dbg(db->dev, msg);			\
 	}						\
+} while (0)
+#endif
+
+#define dm9000_dbg(db, lev, msg...) do {		\
+		dev_dbg(db->dev, msg);			\
 } while (0)
 
 static inline board_info_t *to_dm9000_board(struct net_device *dev)
@@ -157,6 +167,7 @@ static void
 dm9000_reset(board_info_t * db)
 {
 	dev_dbg(db->dev, "resetting device\n");
+	lsd_eth_dbg(LSD_DBG,"resetting device\n");
 
 	/* RESET device */
 	writeb(DM9000_NCR, db->io_addr);
@@ -511,10 +522,15 @@ static u32 dm9000_get_link(struct net_device *dev)
 	u32 ret;
 
 	if (dm->flags & DM9000_PLATF_EXT_PHY)
+	{
 		ret = mii_link_ok(&dm->mii);
+		lsd_eth_dbg(LSD_DBG,"mii_link_ok dm->mii ret=%d\n",ret);
+	}	
 	else
+	{	
 		ret = dm9000_read_locked(dm, DM9000_NSR) & NSR_LINKST ? 1 : 0;
-
+		lsd_eth_dbg(LSD_DBG,"dm9000_read_locked ret=%d\n",ret);
+	}
 	return ret;
 }
 
@@ -1178,8 +1194,13 @@ dm9000_open(struct net_device *dev)
 	irqflags |= IRQF_SHARED;
 
 	if (request_irq(dev->irq, dm9000_interrupt, irqflags, dev->name, dev))
+	{
 		return -EAGAIN;
-
+	}
+	else
+	{
+	
+	}
 	/* Initialize DM9000 board */
 	dm9000_reset(db);
 	dm9000_init_dm9000(dev);
@@ -1420,23 +1441,39 @@ dm9000_probe(struct platform_device *pdev)
 			}
 		}
 	}
+	else
+	{
+		lsd_eth_dbg(LSD_DBG,"db->irq_wake < 0\n");
+	}
 
 	iosize = resource_size(db->addr_res);
+	
 	db->addr_req = request_mem_region(db->addr_res->start, iosize,
 					  pdev->name);
 
 	if (db->addr_req == NULL) {
 		dev_err(db->dev, "cannot claim address reg area\n");
+		lsd_eth_dbg(LSD_ERR,"request_mem_region error\n");
 		ret = -EIO;
 		goto out;
 	}
+	else
+	{
+		lsd_eth_dbg(LSD_OK,"request_mem_region ok\n");
+	}
 
 	db->io_addr = ioremap(db->addr_res->start, iosize);
-
+	
 	if (db->io_addr == NULL) {
 		dev_err(db->dev, "failed to ioremap address reg\n");
+		lsd_eth_dbg(LSD_ERR,"failed to ioremap address reg\n");
 		ret = -EINVAL;
 		goto out;
+	}
+	else
+	{
+		lsd_eth_dbg(LSD_OK,"success to ioremap address reg\n");
+		lsd_eth_dbg(LSD_DBG,"db->addr_res->start=0x%08x,db->io_addr=0x%08x\n",db->addr_res->start,db->io_addr);
 	}
 
 	iosize = resource_size(db->data_res);
@@ -1445,16 +1482,27 @@ dm9000_probe(struct platform_device *pdev)
 
 	if (db->data_req == NULL) {
 		dev_err(db->dev, "cannot claim data reg area\n");
+		lsd_eth_dbg(LSD_ERR,"cannot claim data reg area\n");
 		ret = -EIO;
 		goto out;
+	}
+	else
+	{
+		lsd_eth_dbg(LSD_OK,"success claim data reg area\n");
 	}
 
 	db->io_data = ioremap(db->data_res->start, iosize);
 
 	if (db->io_data == NULL) {
 		dev_err(db->dev, "failed to ioremap data reg\n");
+		lsd_eth_dbg(LSD_ERR,"failed to ioremap data reg\n");
 		ret = -EINVAL;
 		goto out;
+	}
+	else
+	{
+		lsd_eth_dbg(LSD_OK,"success to ioremap data reg\n");
+		lsd_eth_dbg(LSD_DBG,"db->data_res->start=0x%08x,db->io_data=0x%08x\n",db->data_res->start,db->io_data);
 	}
 
 	/* fill in parameters for net-dev structure */
@@ -1509,28 +1557,38 @@ dm9000_probe(struct platform_device *pdev)
 		if (id_val == DM9000_ID)
 			break;
 		dev_err(db->dev, "read wrong id 0x%08x\n", id_val);
+		lsd_eth_dbg(LSD_ERR, "read wrong id 0x%08x\n", id_val);
 	}
 
 	if (id_val != DM9000_ID) {
 		dev_err(db->dev, "wrong id: 0x%08x\n", id_val);
+		lsd_eth_dbg(LSD_ERR,  "wrong id: 0x%08x\n", id_val);
 		ret = -ENODEV;
 		goto out;
+	}
+	else
+	{
+		lsd_eth_dbg(LSD_OK,  "id_val =0x%08x\n", id_val);
 	}
 
 	/* Identify what type of DM9000 we are working on */
 
 	id_val = ior(db, DM9000_CHIPR);
 	dev_dbg(db->dev, "dm9000 revision 0x%02x\n", id_val);
+	lsd_eth_dbg(LSD_DBG,"dm9000 revision 0x%02x\n", id_val);
 
 	switch (id_val) {
 	case CHIPR_DM9000A:
 		db->type = TYPE_DM9000A;
+		lsd_eth_dbg(LSD_DBG,"dm9000 TYPE_DM9000A\n");
 		break;
 	case CHIPR_DM9000B:
 		db->type = TYPE_DM9000B;
+		lsd_eth_dbg(LSD_DBG,"dm9000 TYPE_DM9000B\n");
 		break;
 	default:
 		dev_dbg(db->dev, "ID %02x => defaulting to DM9000E\n", id_val);
+		lsd_eth_dbg(LSD_DBG, "ID %02x => defaulting to DM9000E\n", id_val);
 		db->type = TYPE_DM9000E;
 	}
 
@@ -1580,8 +1638,15 @@ dm9000_probe(struct platform_device *pdev)
 	}
 
 	if (!is_valid_ether_addr(ndev->dev_addr))
+	{	
 		dev_warn(db->dev, "%s: Invalid ethernet MAC address. Please "
 			 "set using ifconfig\n", ndev->name);
+		lsd_eth_dbg(LSD_ERR,"ethernet MAC address is not valid \n");
+	}
+	else
+	{
+		lsd_eth_dbg(LSD_OK,"ethernet MAC address is valid \n");
+	}
 
 	platform_set_drvdata(pdev, ndev);
 	ret = register_netdev(ndev);
@@ -1591,6 +1656,15 @@ dm9000_probe(struct platform_device *pdev)
 		       ndev->name, dm9000_type_to_char(db->type),
 		       db->io_addr, db->io_data, ndev->irq,
 		       ndev->dev_addr, mac_src);
+
+#if 0
+	while(1)
+	{
+		writew(0x5555,db->io_addr);
+	}
+#endif
+
+
 	return 0;
 
 out:

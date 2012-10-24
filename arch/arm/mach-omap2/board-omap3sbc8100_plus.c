@@ -65,6 +65,7 @@
 
 #include <linux/interrupt.h>
 #include <linux/dm9000.h>
+#include <linux/lierda_debug.h>
 
 #define GPMC_CS0_BASE  0x60
 #define GPMC_CS_SIZE   0x30
@@ -790,7 +791,7 @@ static struct resource omap3sbc8100_plus_dm9000_resources[] = {
 };
 
 static struct dm9000_plat_data omap_dm9000_platdata = {
-        .flags = DM9000_PLATF_16BITONLY,
+        .flags = DM9000_PLATF_16BITONLY | DM9000_PLATF_NO_EEPROM,
 };
 
 static struct platform_device omap3sbc8100_plus_dm9000_device = {
@@ -808,8 +809,13 @@ static void __init omap3sbc8100_plus_init_dm9000(void)
         if (gpio_request(OMAP_DM9000_GPIO_IRQ, "dm9000 irq") < 0) {
                 printk(KERN_ERR "Failed to request GPIO%d for dm9000 IRQ\n",
                         OMAP_DM9000_GPIO_IRQ);
+		lsd_eth_dbg(LSD_ERR,"gpio_request OMAP_DM9000_GPIO_IRQ error\n");
                 return;
         }
+	else
+	{
+		lsd_eth_dbg(LSD_OK,"gpio_request OMAP_DM9000_GPIO_IRQ ok\n");
+	}
 
         gpio_direction_input(OMAP_DM9000_GPIO_IRQ);
 }
@@ -862,11 +868,28 @@ static void __init omap3sbc8100_plus_flash_init(void)
 
 		if ((ret & 0xC00) == 0x800) {
 			printk(KERN_INFO "Found NAND on CS%d\n", cs);
+			lsd_dbg(LSD_DBG,"Found NAND on CS%d\n", cs);
 			if (nandcs > GPMC_CS_NUM)
 				nandcs = cs;
 		}
 		cs++;
 	}
+
+	unsigned long data_tmp;
+	data_tmp = gpmc_cs_read_reg(3, GPMC_CS_CONFIG1);
+	lsd_dbg(LSD_DBG,"gpmc_cs_read_reg 3, GPMC_CS_CONFIG1 =0x%08x\n", data_tmp);
+	data_tmp = gpmc_cs_read_reg(3, GPMC_CS_CONFIG2);
+	lsd_dbg(LSD_DBG,"gpmc_cs_read_reg 3, GPMC_CS_CONFIG2 =0x%08x\n", data_tmp);
+	data_tmp = gpmc_cs_read_reg(3, GPMC_CS_CONFIG3);
+	lsd_dbg(LSD_DBG,"gpmc_cs_read_reg 3, GPMC_CS_CONFIG3 =0x%08x\n", data_tmp);
+	data_tmp = gpmc_cs_read_reg(3, GPMC_CS_CONFIG4);
+	lsd_dbg(LSD_DBG,"gpmc_cs_read_reg 3, GPMC_CS_CONFIG4 =0x%08x\n", data_tmp);
+	data_tmp = gpmc_cs_read_reg(3, GPMC_CS_CONFIG5);
+	lsd_dbg(LSD_DBG,"gpmc_cs_read_reg 3, GPMC_CS_CONFIG5 =0x%08x\n", data_tmp);
+	data_tmp = gpmc_cs_read_reg(3, GPMC_CS_CONFIG6);
+	lsd_dbg(LSD_DBG,"gpmc_cs_read_reg 3, GPMC_CS_CONFIG6 =0x%08x\n", data_tmp);
+	data_tmp = gpmc_cs_read_reg(3, GPMC_CS_CONFIG7);
+	lsd_dbg(LSD_DBG,"gpmc_cs_read_reg 3, GPMC_CS_CONFIG7 =0x%08x\n", data_tmp);
 
 	if (nandcs > GPMC_CS_NUM) {
 		printk(KERN_INFO "NAND: Unable to find configuration "
