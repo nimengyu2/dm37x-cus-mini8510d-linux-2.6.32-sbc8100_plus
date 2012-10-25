@@ -19,6 +19,7 @@
  *	Sascha Hauer <s.hauer@pengutronix.de>
  */
 
+//#define DEBUG    1 
 #include <linux/module.h>
 #include <linux/ioport.h>
 #include <linux/netdevice.h>
@@ -31,7 +32,7 @@
 #include <linux/ethtool.h>
 #include <linux/dm9000.h>
 #include <linux/delay.h>
-#define DEBUG    1 
+
 #include <linux/platform_device.h>
 #include <linux/irq.h>
 
@@ -664,11 +665,11 @@ static void dm9000_show_carrier(board_info_t *db,
 	unsigned ncr = dm9000_read_locked(db, DM9000_NCR);
 
 	if (carrier)
-		dev_info(db->dev, "%s: link up, %dMbps, %s-duplex, no LPA\n",
+		dev_info(db->dev, "yuge %s: link up, %dMbps, %s-duplex, no LPA\n",
 			 ndev->name, (nsr & NSR_SPEED) ? 10 : 100,
 			 (ncr & NCR_FDX) ? "full" : "half");
 	else
-		dev_info(db->dev, "%s: link down\n", ndev->name);
+		dev_info(db->dev, "yuge %s: link down\n", ndev->name);
 }
 
 static void
@@ -875,6 +876,8 @@ static void dm9000_send_packet(struct net_device *dev,
 {
 	board_info_t *dm = to_dm9000_board(dev);
 
+	lsd_eth_dbg(LSD_DBG,"enter dm9000_send_packet\n");
+
 	/* The DM9000 is not smart enough to leave fragmented packets alone. */
 	if (dm->ip_summed != ip_summed) {
 		if (ip_summed == CHECKSUM_NONE)
@@ -903,6 +906,7 @@ dm9000_start_xmit(struct sk_buff *skb, struct net_device *dev)
 	board_info_t *db = netdev_priv(dev);
 
 	dm9000_dbg(db, 3, "%s:\n", __func__);
+	lsd_eth_dbg(LSD_DBG,"enter dm9000_start_xmit\n");
 
 	if (db->tx_pkt_cnt > 1)
 		return NETDEV_TX_BUSY;
@@ -942,6 +946,7 @@ dm9000_start_xmit(struct sk_buff *skb, struct net_device *dev)
 static void dm9000_tx_done(struct net_device *dev, board_info_t *db)
 {
 	int tx_status = ior(db, DM9000_NSR);	/* Got TX status */
+	lsd_eth_dbg(LSD_DBG,"enter dm9000_tx_done\n");
 
 	if (tx_status & (NSR_TX2END | NSR_TX1END)) {
 		/* One packet sent complete */
@@ -977,6 +982,8 @@ dm9000_rx(struct net_device *dev)
 	u8 rxbyte, *rdptr;
 	bool GoodPacket;
 	int RxLen;
+
+	lsd_eth_dbg(LSD_DBG,"enter dm9000_rx\n");
 
 	/* Check packet ready or not */
 	do {
@@ -1080,6 +1087,7 @@ static irqreturn_t dm9000_interrupt(int irq, void *dev_id)
 	u8 reg_save;
 
 	dm9000_dbg(db, 3, "entering %s\n", __func__);
+	lsd_eth_dbg(LSD_DBG,"enter dm9000_interrupt\n");
 
 	/* A real interrupt coming */
 
@@ -1181,10 +1189,12 @@ dm9000_open(struct net_device *dev)
 {
 	board_info_t *db = netdev_priv(dev);
 	unsigned long irqflags = db->irq_res->flags & IRQF_TRIGGER_MASK;
+	lsd_eth_dbg(LSD_DBG,"enter dm9000_open\n");
 
 	if (netif_msg_ifup(db))
+	{
 		dev_dbg(db->dev, "enabling %s\n", dev->name);
-
+	}
 	/* If there is no IRQ type specified, default to something that
 	 * may work, and tell the user that this is a problem */
 
@@ -1195,11 +1205,12 @@ dm9000_open(struct net_device *dev)
 
 	if (request_irq(dev->irq, dm9000_interrupt, irqflags, dev->name, dev))
 	{
+		lsd_eth_dbg(LSD_ERR,"request_irq error\n");
 		return -EAGAIN;
 	}
 	else
 	{
-	
+		lsd_eth_dbg(LSD_OK,"request_irq ok\n");
 	}
 	/* Initialize DM9000 board */
 	dm9000_reset(db);
@@ -1208,10 +1219,15 @@ dm9000_open(struct net_device *dev)
 	/* Init driver variable */
 	db->dbug_cnt = 0;
 
+	mdelay(10);
+
 	mii_check_media(&db->mii, netif_msg_link(db), 1);
 	netif_start_queue(dev);
+	lsd_eth_dbg(LSD_DBG,"netif_start_queue\n");
 	
 	dm9000_schedule_poll(db);
+
+	
 
 	return 0;
 }
@@ -1323,7 +1339,7 @@ static void
 dm9000_shutdown(struct net_device *dev)
 {
 	board_info_t *db = netdev_priv(dev);
-
+	lsd_eth_dbg(LSD_DBG,"enter dm9000_shutdown\n");
 	/* RESET device */
 	dm9000_phy_write(dev, 0, MII_BMCR, BMCR_RESET);	/* PHY RESET */
 	iow(db, DM9000_GPR, 0x01);	/* Power-Down PHY */
@@ -1339,6 +1355,8 @@ static int
 dm9000_stop(struct net_device *ndev)
 {
 	board_info_t *db = netdev_priv(ndev);
+
+	lsd_eth_dbg(LSD_DBG,"enter dm9000_stop\n");
 
 	if (netif_msg_ifdown(db))
 		dev_dbg(db->dev, "shutting down %s\n", ndev->name);
