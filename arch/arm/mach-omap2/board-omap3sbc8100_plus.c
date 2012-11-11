@@ -232,9 +232,9 @@ static struct omap_dss_device sbc8100_plus_lcd_device = {
         .name                   = "lcd",
         .driver_name            = "panel-sbc8100_plus",
         .type                   = OMAP_DISPLAY_TYPE_DPI,
-        .phy.dpi.data_lines     = 24,
+	.phy.dpi.data_lines     = 24,
 #ifndef CONFIG_ANDROID 
-        .panel.recommended_bpp  = 16,
+	.panel.recommended_bpp  = 24,
 #endif
         .platform_enable        = omap3_sbc8100_plus_enable_lcd,
         .platform_disable       = omap3_sbc8100_plus_disable_lcd,
@@ -256,6 +256,7 @@ static struct omap_dss_device sbc8100_plus_dvi_device = {
 	.name = "dvi",
 	.driver_name = "generic_panel",
 	.phy.dpi.data_lines = 24,
+	//.phy.dpi.data_lines = 18,
 	.platform_enable = sbc8100_plus_enable_dvi,
 	.platform_disable = sbc8100_plus_disable_dvi,
 };

@@ -23,6 +23,7 @@
 #include <plat/display.h>
 
 static struct omap_video_timings sbc8100_plus_panel_timings = {
+#if 0
 #ifdef CONFIG_LCD_43inch
         .x_res = 480,
         .y_res = 272,
@@ -64,6 +65,18 @@ static struct omap_video_timings sbc8100_plus_panel_timings = {
          .pixel_clock    = 72000,
 
 #endif
+#endif
+	.x_res          = 800,
+        .y_res          = 600,
+
+        .hsw            = 3,   /* hsync_len (4) - 1 */
+        .hfp            = 210,      /* right_margin (4) - 1 */
+        .hbp            = 46,      /* left_margin (40) - 1 */
+        .vsw            = 3,       /* vsync_len (2) - 1 */
+        .vfp            = 22,     /* lower_margin */
+        .vbp            = 23,     /* upper_margin (8) - 1 */
+
+        .pixel_clock    = 33300,
 };
 
 static int sbc8100_plus_panel_probe(struct omap_dss_device *dssdev)

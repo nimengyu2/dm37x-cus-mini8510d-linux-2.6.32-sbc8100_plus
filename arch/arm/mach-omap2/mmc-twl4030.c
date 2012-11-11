@@ -25,6 +25,7 @@
 #include <plat/board.h>
 
 #include "mmc-twl4030.h"
+#include <linux/lierda_debug.h>
 
 
 #if defined(CONFIG_REGULATOR) && \
@@ -496,12 +497,17 @@ void __init twl4030_mmc_init(struct twl4030_hsmmc_info *controllers)
 			/* on-chip level shifting via PBIAS0/PBIAS1 */
 			mmc->slots[0].set_power = twl_mmc1_set_power;
 			mmc->slots[0].set_sleep = twl_mmc1_set_sleep;
-
+			#if 0
 			/* Omap3630 HSMMC1 supports only 4-bit */
 			if (cpu_is_omap3630() && c->wires > 4) {
 				c->wires = 4;
 				mmc->slots[0].wires = c->wires;
 			}
+			#endif
+			lsd_dbg(LSD_DBG,"c->mmc=%d,c->wires=%d\n",c->mmc,c->wires);
+			c->wires = 2;
+			mmc->slots[0].wires = c->wires;
+			lsd_dbg(LSD_DBG,"c->mmc=%d,c->wires=%d\n",c->mmc,c->wires);
 			break;
 		case 2:
 			if (c->ext_clock)
