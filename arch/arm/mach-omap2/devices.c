@@ -597,12 +597,14 @@ static inline void omap2_mmc_mux(struct omap_mmc_platform_data *mmc_controller,
 
 	if (cpu_is_omap34xx()) {
 		if (controller_nr == 0) {
+			#if 0
 			omap_mux_init_signal("sdmmc1_clk",
 				OMAP_PIN_INPUT_PULLUP);
 			omap_mux_init_signal("sdmmc1_cmd",
 				OMAP_PIN_INPUT_PULLUP);
 			omap_mux_init_signal("sdmmc1_dat0",
 				OMAP_PIN_INPUT_PULLUP);
+			#endif
 			if (mmc_controller->slots[0].wires == 4 ||
 				mmc_controller->slots[0].wires == 8) {
 				omap_mux_init_signal("sdmmc1_dat1",

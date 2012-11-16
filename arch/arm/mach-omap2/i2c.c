@@ -47,9 +47,9 @@ int __init omap_register_i2c_bus(int bus_id, u32 clkrate,
 		char mux_name[sizeof("i2c2_scl.i2c2_scl")];
 
 		sprintf(mux_name, "i2c%i_scl.i2c%i_scl", bus_id, bus_id);
-		omap_mux_init_signal(mux_name, OMAP_PIN_INPUT);
+		//omap_mux_init_signal(mux_name, OMAP_PIN_INPUT);
 		sprintf(mux_name, "i2c%i_sda.i2c%i_sda", bus_id, bus_id);
-		omap_mux_init_signal(mux_name, OMAP_PIN_INPUT);
+		//omap_mux_init_signal(mux_name, OMAP_PIN_INPUT);
 	}
 
 	return omap_plat_register_i2c_bus(bus_id, clkrate, info, len);

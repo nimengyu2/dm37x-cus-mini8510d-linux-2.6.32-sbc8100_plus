@@ -43,6 +43,7 @@
 
 #include <linux/of_platform.h>
 #include <asm/prom.h>
+#include <linux/lierda_debug.h>
 
 #include "sja1000.h"
 
@@ -225,6 +226,7 @@ static struct of_platform_driver sja1000_ofp_driver = {
 
 static int __init sja1000_ofp_init(void)
 {
+	lsd_can_dbg(LSD_DBG,"enter func=%s\n",__FUNCTION__);	
 	return of_register_platform_driver(&sja1000_ofp_driver);
 }
 module_init(sja1000_ofp_init);

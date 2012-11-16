@@ -66,6 +66,7 @@
 #include <linux/interrupt.h>
 #include <linux/dm9000.h>
 #include <linux/lierda_debug.h>
+#include <linux/can/platform/sja1000.h>
 
 #define GPMC_CS0_BASE  0x60
 #define GPMC_CS_SIZE   0x30
@@ -769,6 +770,271 @@ struct spi_board_info omap3sbc8100_plus_spi_board_info[] = {
 	},
 };
 
+//--------------------------------------------------------------//
+// add gpmc-sja1000 
+#define SJA1000_CS6_BASE_ADDR  0x2E000000
+#define OMAP_SJA1000_GPIO_IRQ    40
+
+static struct resource pcm970_sja1000_resources[] = {
+	{
+		.start   = SJA1000_CS6_BASE_ADDR,
+		.end     = SJA1000_CS6_BASE_ADDR + 0x100 - 1,
+		.flags   = IORESOURCE_MEM,
+	}, 
+	{
+		.start  = OMAP_GPIO_IRQ(OMAP_SJA1000_GPIO_IRQ),
+                .end    = OMAP_GPIO_IRQ(OMAP_SJA1000_GPIO_IRQ),
+		.flags   = IORESOURCE_IRQ | IORESOURCE_IRQ_LOWEDGE,
+	},
+};
+
+
+static struct sja1000_platform_data pcm970_sja1000_platform_data = {
+	.clock	= 16000000 / 2,
+	.ocr		= OCR_TX1_PULLDOWN | OCR_TX0_PUSHPULL,
+	.cdr		= CDR_CBP,
+};
+
+static struct platform_device pcm970_sja1000 = {
+	.name = "sja1000_platform",
+	.id             = 0,
+	.dev = {
+		.platform_data = &pcm970_sja1000_platform_data,
+	},
+	.resource = pcm970_sja1000_resources,
+	.num_resources = ARRAY_SIZE(pcm970_sja1000_resources),
+};
+
+
+#define CAN1_GPMC_CONFIG1	0x00001000
+#define CAN1_GPMC_CONFIG2	0x001e1e00
+#define CAN1_GPMC_CONFIG3	0x00080300
+#define CAN1_GPMC_CONFIG4	0x1c091c09
+#define CAN1_GPMC_CONFIG5	0x04181f1f
+#define CAN1_GPMC_CONFIG6	0x00000FCF
+#define CAN1_GPMC_CONFIG7	0x00000f6E  // ¼´0x2E 0 00000
+
+#define GPMC_CS 6
+
+#if 0
+static const u32 gpmc_nor[7] = {
+	 CAN1_GPMC_CONFIG1,
+	 CAN1_GPMC_CONFIG2,
+	 CAN1_GPMC_CONFIG3,
+	 CAN1_GPMC_CONFIG4,
+	 CAN1_GPMC_CONFIG5,
+	 CAN1_GPMC_CONFIG6, 
+	 CAN1_GPMC_CONFIG7
+};
+#endif
+
+
+#if 0
+#define STNOR_GPMC_CONFIG1 0x00000003
+#define STNOR_GPMC_CONFIG2 0x001E1E01
+#define STNOR_GPMC_CONFIG3 0x000E0E02
+#define STNOR_GPMC_CONFIG4 0x1D0C1D0C
+#define STNOR_GPMC_CONFIG5 0x011C1F1F
+#define STNOR_GPMC_CONFIG6 0x00000FCF
+
+static const u32 gpmc_nor[7] = {
+	 STNOR_GPMC_CONFIG1,
+	 STNOR_GPMC_CONFIG2,
+	 STNOR_GPMC_CONFIG3,
+	 STNOR_GPMC_CONFIG4,
+	 STNOR_GPMC_CONFIG5,
+	 STNOR_GPMC_CONFIG6, 
+	 CAN1_GPMC_CONFIG7
+};
+#endif
+
+#if 1
+#define STNOR_GPMC_CONFIG1 0x00001800
+#define STNOR_GPMC_CONFIG2 0x00141400
+#define STNOR_GPMC_CONFIG3 0x00141400
+#define STNOR_GPMC_CONFIG4 0x0f010f01
+#define STNOR_GPMC_CONFIG5 0x010c1414
+#define STNOR_GPMC_CONFIG6 0x1f0f0a80
+
+static const u32 gpmc_nor[7] = {
+	 STNOR_GPMC_CONFIG1,
+	 STNOR_GPMC_CONFIG2,
+	 STNOR_GPMC_CONFIG3,
+	 STNOR_GPMC_CONFIG4,
+	 STNOR_GPMC_CONFIG5,
+	 STNOR_GPMC_CONFIG6, 
+	 CAN1_GPMC_CONFIG7
+};
+#endif
+
+static void __init omap3sbc8100_plus_init_sja1000(void)
+{
+	lsd_can_dbg(LSD_DBG,"enter func omap3sbc8100_plus_init_sja1000\n");	
+	
+	omap_mux_init_gpio(OMAP_SJA1000_GPIO_IRQ, OMAP_PIN_INPUT_PULLUP);
+	//omap_mux_init_gpio(40, OMAP_PIN_INPUT);
+
+        if (gpio_request(OMAP_SJA1000_GPIO_IRQ, "sja1000 irq") < 0) {
+                printk(KERN_ERR "Failed to request GPIO%d for sja1000 IRQ\n",
+                        OMAP_SJA1000_GPIO_IRQ);
+		lsd_can_dbg(LSD_ERR,"gpio_request OMAP_SJA1000_GPIO_IRQ error\n");
+                return;
+        }
+	else
+	{
+		lsd_can_dbg(LSD_OK,"gpio_request OMAP_SJA1000_GPIO_IRQ ok\n");
+	}
+
+        gpio_direction_input(OMAP_SJA1000_GPIO_IRQ);
+
+	gpmc_cs_write_reg(GPMC_CS, GPMC_CS_CONFIG1, gpmc_nor[0]);
+
+	gpmc_cs_write_reg(GPMC_CS, GPMC_CS_CONFIG2, gpmc_nor[1]);
+
+	gpmc_cs_write_reg(GPMC_CS, GPMC_CS_CONFIG3, gpmc_nor[2]);
+
+	gpmc_cs_write_reg(GPMC_CS, GPMC_CS_CONFIG4, gpmc_nor[3]);
+
+	gpmc_cs_write_reg(GPMC_CS, GPMC_CS_CONFIG5, gpmc_nor[4]);
+
+	gpmc_cs_write_reg(GPMC_CS, GPMC_CS_CONFIG6, gpmc_nor[5]);
+	
+	//val = gpmc_cs_read_reg(GPMC_CS, GPMC_CS_CONFIG7);
+	//val |= (1 << 6);
+	gpmc_cs_write_reg(GPMC_CS, GPMC_CS_CONFIG7, gpmc_nor[6]);
+
+	udelay(100);
+
+	omap_mux_init_gpio(42, OMAP_PIN_OUTPUT);
+	//omap_mux_init_signal("sdrc_cke0", OMAP_PIN_OUTPUT);
+	gpio_request(42, "sja1000");
+	gpio_direction_output(42,1);
+	gpio_set_value(42,1);
+	//while(1);
+
+	
+}
+
+//--------------------------------------------------------------//
+
+
+
+
+//--------------------------------------------------------------//
+// add gpmc-sja1000 2
+#define SJA1000_CS7_BASE_ADDR  0x30000000
+#define OMAP_SJA10002_GPIO_IRQ    41
+
+static struct resource pcm970_sja10002_resources[] = {
+	{
+		.start   = SJA1000_CS7_BASE_ADDR,
+		.end     = SJA1000_CS7_BASE_ADDR + 0x100 - 1,
+		.flags   = IORESOURCE_MEM,
+	}, 
+	{
+		.start  = OMAP_GPIO_IRQ(OMAP_SJA10002_GPIO_IRQ),
+                .end    = OMAP_GPIO_IRQ(OMAP_SJA10002_GPIO_IRQ),
+		.flags   = IORESOURCE_IRQ | IORESOURCE_IRQ_LOWEDGE,
+	},
+};
+
+
+static struct sja1000_platform_data pcm970_sja10002_platform_data = {
+	.clock	= 16000000 / 2,
+	.ocr		= OCR_TX1_PULLDOWN | OCR_TX0_PUSHPULL,
+	.cdr		= CDR_CBP,
+};
+
+static struct platform_device pcm970_sja10002 = {
+	.name = "sja1000_platform",
+	.id             = 1,
+	.dev = {
+		.platform_data = &pcm970_sja10002_platform_data,
+	},
+	.resource = pcm970_sja10002_resources,
+	.num_resources = ARRAY_SIZE(pcm970_sja10002_resources),
+};
+
+
+#define CAN2_GPMC_CONFIG1	0x00001000
+#define CAN2_GPMC_CONFIG2	0x001e1e00
+#define CAN2_GPMC_CONFIG3	0x00080300
+#define CAN2_GPMC_CONFIG4	0x1c091c09
+#define CAN2_GPMC_CONFIG5	0x04181f1f
+#define CAN2_GPMC_CONFIG6	0x00000FCF
+#define CAN2_GPMC_CONFIG7	0x00000f70  // ¼´0x30 0 00000
+
+#define GPMC_CS2 7
+
+static const u32 gpmc_nor2[7] = {
+	 CAN2_GPMC_CONFIG1,
+	 CAN2_GPMC_CONFIG2,
+	 CAN2_GPMC_CONFIG3 ,
+	 CAN2_GPMC_CONFIG4,
+	 CAN2_GPMC_CONFIG5,
+	 CAN2_GPMC_CONFIG6, 
+	 CAN2_GPMC_CONFIG7
+};
+
+static void __init omap3sbc8100_plus_init_sja10002(void)
+{
+	lsd_can_dbg(LSD_DBG,"enter func omap3sbc81002_plus_init_sja1000\n");	
+	
+
+	omap_mux_init_gpio(OMAP_SJA10002_GPIO_IRQ, OMAP_PIN_OUTPUT);
+	//omap_mux_init_signal("sdrc_cke0", OMAP_PIN_OUTPUT);
+	gpio_request(OMAP_SJA10002_GPIO_IRQ, "sja10002");
+	gpio_direction_output(OMAP_SJA10002_GPIO_IRQ,1);
+	gpio_set_value(OMAP_SJA10002_GPIO_IRQ,1);
+
+	omap_mux_init_gpio(OMAP_SJA10002_GPIO_IRQ, OMAP_PIN_INPUT_PULLUP);
+	//omap_mux_init_gpio(40, OMAP_PIN_INPUT);
+
+#if 0
+        if (gpio_request(OMAP_SJA10002_GPIO_IRQ, "sja1000 irq") < 0) {
+                printk(KERN_ERR "Failed to request GPIO%d for sja10002 IRQ\n",
+                        OMAP_SJA10002_GPIO_IRQ);
+		lsd_can_dbg(LSD_ERR,"gpio_request OMAP_SJA10002_GPIO_IRQ error\n");
+                return;
+        }
+	else
+	{
+		lsd_can_dbg(LSD_OK,"gpio_request OMAP_SJA10002_GPIO_IRQ ok\n");
+	}
+#endif
+
+        gpio_direction_input(OMAP_SJA10002_GPIO_IRQ);
+
+	gpmc_cs_write_reg(GPMC_CS2, GPMC_CS_CONFIG1, gpmc_nor2[0]);
+
+	gpmc_cs_write_reg(GPMC_CS2, GPMC_CS_CONFIG2, gpmc_nor2[1]);
+
+	gpmc_cs_write_reg(GPMC_CS2, GPMC_CS_CONFIG3, gpmc_nor2[2]);
+
+	gpmc_cs_write_reg(GPMC_CS2, GPMC_CS_CONFIG4, gpmc_nor2[3]);
+
+	gpmc_cs_write_reg(GPMC_CS2, GPMC_CS_CONFIG5, gpmc_nor2[4]);
+
+	gpmc_cs_write_reg(GPMC_CS2, GPMC_CS_CONFIG6, gpmc_nor2[5]);
+	
+	//val = gpmc_cs_read_reg(GPMC_CS, GPMC_CS_CONFIG7);
+	//val |= (1 << 6);
+	gpmc_cs_write_reg(GPMC_CS2, GPMC_CS_CONFIG7, gpmc_nor2[6]);
+
+	udelay(100);
+
+	#if 0	
+	omap_mux_init_gpio(42, OMAP_PIN_OUTPUT);
+	//omap_mux_init_signal("sdrc_cke0", OMAP_PIN_OUTPUT);
+	gpio_request(42, "sja1000");
+	gpio_direction_output(42,1);
+	gpio_set_value(42,1);
+	//while(1);
+	#endif
+	
+}
+
+//--------------------------------------------------------------//
 
 
 #define OMAP_DM9000_BASE        0x2c000000
@@ -853,6 +1119,8 @@ static struct platform_device *omap3_sbc8100_plus_devices[] __initdata = {
 	&keys_gpio,
 	&sbc8100_plus_dss_device,
 	&omap3sbc8100_plus_dm9000_device,
+	&pcm970_sja1000,
+	//&pcm970_sja10002,
 };
 
 static void __init omap3sbc8100_plus_flash_init(void)
@@ -892,6 +1160,7 @@ static void __init omap3sbc8100_plus_flash_init(void)
 	data_tmp = gpmc_cs_read_reg(3, GPMC_CS_CONFIG7);
 	lsd_dbg(LSD_DBG,"gpmc_cs_read_reg 3, GPMC_CS_CONFIG7 =0x%08x\n", data_tmp);
 
+
 	if (nandcs > GPMC_CS_NUM) {
 		printk(KERN_INFO "NAND: Unable to find configuration "
 				 "in GPMC\n ");
@@ -908,6 +1177,22 @@ static void __init omap3sbc8100_plus_flash_init(void)
 		if (platform_device_register(&omap3sbc8100_plus_nand_device) < 0)
 			printk(KERN_ERR "Unable to register NAND device\n");
 	}
+
+	data_tmp = gpmc_cs_read_reg(0, GPMC_CS_CONFIG1);
+	lsd_dbg(LSD_DBG,"gpmc_cs_read_reg 0, GPMC_CS_CONFIG1 =0x%08x\n", data_tmp);
+	data_tmp = gpmc_cs_read_reg(0, GPMC_CS_CONFIG2);
+	lsd_dbg(LSD_DBG,"gpmc_cs_read_reg 0, GPMC_CS_CONFIG2 =0x%08x\n", data_tmp);
+	data_tmp = gpmc_cs_read_reg(0, GPMC_CS_CONFIG3);
+	lsd_dbg(LSD_DBG,"gpmc_cs_read_reg 0, GPMC_CS_CONFIG3 =0x%08x\n", data_tmp);
+	data_tmp = gpmc_cs_read_reg(0, GPMC_CS_CONFIG4);
+	lsd_dbg(LSD_DBG,"gpmc_cs_read_reg 0, GPMC_CS_CONFIG4 =0x%08x\n", data_tmp);
+	data_tmp = gpmc_cs_read_reg(0, GPMC_CS_CONFIG5);
+	lsd_dbg(LSD_DBG,"gpmc_cs_read_reg 0, GPMC_CS_CONFIG5 =0x%08x\n", data_tmp);
+	data_tmp = gpmc_cs_read_reg(0, GPMC_CS_CONFIG6);
+	lsd_dbg(LSD_DBG,"gpmc_cs_read_reg 0, GPMC_CS_CONFIG6 =0x%08x\n", data_tmp);
+	data_tmp = gpmc_cs_read_reg(0, GPMC_CS_CONFIG7);
+	lsd_dbg(LSD_DBG,"gpmc_cs_read_reg 0, GPMC_CS_CONFIG7 =0x%08x\n", data_tmp);
+
 }
 
 static struct ehci_hcd_omap_platform_data ehci_pdata __initdata = {
@@ -945,11 +1230,14 @@ static void __init omap3_sbc8100_plus_init(void)
 	omap3sbc8100_plus_flash_init();
 
 	/* Ensure SDRC pins are mux'd for self-refresh */
-	omap_mux_init_signal("sdrc_cke0", OMAP_PIN_OUTPUT);
-	omap_mux_init_signal("sdrc_cke1", OMAP_PIN_OUTPUT);
+	//omap_mux_init_signal("sdrc_cke0", OMAP_PIN_OUTPUT);
+	//omap_mux_init_signal("sdrc_cke1", OMAP_PIN_OUTPUT);
 
 	omap3_sbc8100_plus_display_init();
 	omap3sbc8100_plus_init_dm9000();
+	omap3sbc8100_plus_init_sja1000();
+	//omap3sbc8100_plus_init_sja10002();
+
 #ifdef CONFIG_USB_ANDROID
 	omap3evm_android_gadget_init();
 #endif

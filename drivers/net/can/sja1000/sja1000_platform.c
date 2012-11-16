@@ -28,6 +28,7 @@
 #include <linux/can/dev.h>
 #include <linux/can/platform/sja1000.h>
 #include <linux/io.h>
+#include <linux/lierda_debug.h>
 
 #include "sja1000.h"
 
@@ -39,12 +40,16 @@ MODULE_LICENSE("GPL v2");
 
 static u8 sp_read_reg(const struct sja1000_priv *priv, int reg)
 {
+	//u8 ret;
+	//ret = ioread8(priv->reg_base + reg);
+	//lsd_can_dbg(LSD_DBG,"%s:ioread8 priv->reg_base=0x%08x,reg=%d,data=0x%02x\n",__FUNCTION__,priv->reg_base,reg,ret);	
 	return ioread8(priv->reg_base + reg);
 }
 
 static void sp_write_reg(const struct sja1000_priv *priv, int reg, u8 val)
-{
+{	
 	iowrite8(val, priv->reg_base + reg);
+	lsd_can_dbg(LSD_DBG,"%s,priv->reg_base=0x%08x,reg=%d,val=0x%02x\n",__FUNCTION__,priv->reg_base,reg,val);	
 }
 
 static int sp_probe(struct platform_device *pdev)
@@ -55,6 +60,7 @@ static int sp_probe(struct platform_device *pdev)
 	struct sja1000_priv *priv;
 	struct resource *res_mem, *res_irq;
 	struct sja1000_platform_data *pdata;
+	lsd_can_dbg(LSD_DBG,"enter func=%s\n",__FUNCTION__);	
 
 	pdata = pdev->dev.platform_data;
 	if (!pdata) {
@@ -76,11 +82,13 @@ static int sp_probe(struct platform_device *pdev)
 		goto exit;
 	}
 
+	
 	addr = ioremap_nocache(res_mem->start, resource_size(res_mem));
 	if (!addr) {
 		err = -ENOMEM;
 		goto exit_release;
 	}
+	lsd_can_dbg(LSD_DBG,"res_mem->start=0x%08x,ioremap_nocache,addr=0x%08x\n",res_mem->start,addr);
 
 	dev = alloc_sja1000dev(0);
 	if (!dev) {
@@ -101,12 +109,23 @@ static int sp_probe(struct platform_device *pdev)
 	dev_set_drvdata(&pdev->dev, dev);
 	SET_NETDEV_DEV(dev, &pdev->dev);
 
+#if 0
+	while(1)
+	{
+		writew(0x5555,addr);
+		udelay(100);
+	}
+#endif
+
 	err = register_sja1000dev(dev);
 	if (err) {
 		dev_err(&pdev->dev, "registering %s failed (err=%d)\n",
 			DRV_NAME, err);
 		goto exit_free;
 	}
+
+
+
 
 	dev_info(&pdev->dev, "%s device registered (reg_base=%p, irq=%d)\n",
 		 DRV_NAME, priv->reg_base, dev->irq);
@@ -127,7 +146,7 @@ static int sp_remove(struct platform_device *pdev)
 	struct net_device *dev = dev_get_drvdata(&pdev->dev);
 	struct sja1000_priv *priv = netdev_priv(dev);
 	struct resource *res;
-
+	lsd_can_dbg(LSD_DBG,"enter func=%s\n",__FUNCTION__);	
 	unregister_sja1000dev(dev);
 	dev_set_drvdata(&pdev->dev, NULL);
 
@@ -153,11 +172,13 @@ static struct platform_driver sp_driver = {
 
 static int __init sp_init(void)
 {
+	lsd_can_dbg(LSD_DBG,"enter func=%s\n",__FUNCTION__);	
 	return platform_driver_register(&sp_driver);
 }
 
 static void __exit sp_exit(void)
 {
+	lsd_can_dbg(LSD_DBG,"enter func=%s\n",__FUNCTION__);	
 	platform_driver_unregister(&sp_driver);
 }
 

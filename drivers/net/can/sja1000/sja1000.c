@@ -44,6 +44,7 @@
  *
  */
 
+#define DEBUG    1 
 #include <linux/module.h>
 #include <linux/init.h>
 #include <linux/kernel.h>
@@ -63,6 +64,7 @@
 #include <linux/can.h>
 #include <linux/can/dev.h>
 #include <linux/can/error.h>
+#include <linux/lierda_debug.h>
 
 #include "sja1000.h"
 
@@ -87,6 +89,7 @@ static struct can_bittiming_const sja1000_bittiming_const = {
 static int sja1000_probe_chip(struct net_device *dev)
 {
 	struct sja1000_priv *priv = netdev_priv(dev);
+	lsd_can_dbg(LSD_DBG,"enter func=%s\n",__FUNCTION__);
 
 	if (priv->reg_base && (priv->read_reg(priv, 0) == 0xFF)) {
 		printk(KERN_INFO "%s: probing @0x%lX failed\n",
@@ -102,9 +105,10 @@ static void set_reset_mode(struct net_device *dev)
 	unsigned char status = priv->read_reg(priv, REG_MOD);
 	int i;
 
+	lsd_can_dbg(LSD_DBG,"enter func=%s,REG_IER=%d,REG_MOD=%d,IRQ_OFF=%d,MOD_RM=%d\n",__FUNCTION__,REG_IER,REG_MOD,IRQ_OFF,MOD_RM);
 	/* disable interrupts */
 	priv->write_reg(priv, REG_IER, IRQ_OFF);
-
+	
 	for (i = 0; i < 100; i++) {
 		/* check reset bit */
 		if (status & MOD_RM) {
@@ -115,6 +119,7 @@ static void set_reset_mode(struct net_device *dev)
 		priv->write_reg(priv, REG_MOD, MOD_RM);	/* reset chip */
 		udelay(10);
 		status = priv->read_reg(priv, REG_MOD);
+		lsd_can_dbg(LSD_DBG,"read_reg REG_MOD=0x%08x\n",status);
 	}
 
 	dev_err(dev->dev.parent, "setting SJA1000 into reset mode failed!\n");
@@ -125,6 +130,7 @@ static void set_normal_mode(struct net_device *dev)
 	struct sja1000_priv *priv = netdev_priv(dev);
 	unsigned char status = priv->read_reg(priv, REG_MOD);
 	int i;
+	lsd_can_dbg(LSD_DBG,"enter func=%s,REG_IER=%d,REG_MOD=%d,IRQ_ALL=%d,MOD_RM=%d\n",__FUNCTION__,REG_IER,REG_MOD,IRQ_ALL,MOD_RM);
 
 	for (i = 0; i < 100; i++) {
 		/* check reset bit */
@@ -139,6 +145,7 @@ static void set_normal_mode(struct net_device *dev)
 		priv->write_reg(priv, REG_MOD, 0x00);
 		udelay(10);
 		status = priv->read_reg(priv, REG_MOD);
+		lsd_can_dbg(LSD_DBG,"read_reg REG_MOD=0x%08x\n",status);
 	}
 
 	dev_err(dev->dev.parent, "setting SJA1000 into normal mode failed!\n");
@@ -147,7 +154,7 @@ static void set_normal_mode(struct net_device *dev)
 static void sja1000_start(struct net_device *dev)
 {
 	struct sja1000_priv *priv = netdev_priv(dev);
-
+	lsd_can_dbg(LSD_DBG,"enter func=%s\n",__FUNCTION__);
 	/* leave reset mode */
 	if (priv->can.state != CAN_STATE_STOPPED)
 		set_reset_mode(dev);
@@ -164,7 +171,7 @@ static void sja1000_start(struct net_device *dev)
 static int sja1000_set_mode(struct net_device *dev, enum can_mode mode)
 {
 	struct sja1000_priv *priv = netdev_priv(dev);
-
+	lsd_can_dbg(LSD_DBG,"enter func=%s\n",__FUNCTION__);
 	if (!priv->open_time)
 		return -EINVAL;
 
@@ -187,6 +194,7 @@ static int sja1000_set_bittiming(struct net_device *dev)
 	struct sja1000_priv *priv = netdev_priv(dev);
 	struct can_bittiming *bt = &priv->can.bittiming;
 	u8 btr0, btr1;
+	lsd_can_dbg(LSD_DBG,"enter func=%s\n",__FUNCTION__);
 
 	btr0 = ((bt->brp - 1) & 0x3f) | (((bt->sjw - 1) & 0x3) << 6);
 	btr1 = ((bt->prop_seg + bt->phase_seg1 - 1) & 0xf) |
@@ -214,6 +222,7 @@ static int sja1000_set_bittiming(struct net_device *dev)
 static void chipset_init(struct net_device *dev)
 {
 	struct sja1000_priv *priv = netdev_priv(dev);
+	lsd_can_dbg(LSD_DBG,"enter func=%s\n",__FUNCTION__);
 
 	/* set clock divider and output control register */
 	priv->write_reg(priv, REG_CDR, priv->cdr | CDR_PELICAN);
@@ -248,6 +257,7 @@ static netdev_tx_t sja1000_start_xmit(struct sk_buff *skb,
 	canid_t id;
 	uint8_t dreg;
 	int i;
+	lsd_can_dbg(LSD_DBG,"enter func=%s\n",__FUNCTION__);
 
 	netif_stop_queue(dev);
 
@@ -294,6 +304,7 @@ static void sja1000_rx(struct net_device *dev)
 	uint8_t dreg;
 	canid_t id;
 	int i;
+	lsd_can_dbg(LSD_DBG,"enter func=%s\n",__FUNCTION__);
 
 	/* create zero'ed CAN frame buffer */
 	skb = alloc_can_skb(dev, &cf);
@@ -344,6 +355,7 @@ static int sja1000_err(struct net_device *dev, uint8_t isrc, uint8_t status)
 	struct sk_buff *skb;
 	enum can_state state = priv->can.state;
 	uint8_t ecc, alc;
+	lsd_can_dbg(LSD_DBG,"enter func=%s\n",__FUNCTION__);
 
 	skb = alloc_can_err_skb(dev, &cf);
 	if (skb == NULL)
@@ -454,6 +466,8 @@ irqreturn_t sja1000_interrupt(int irq, void *dev_id)
 	uint8_t isrc, status;
 	int n = 0;
 
+	lsd_can_dbg(LSD_DBG,"enter func=%s\n",__FUNCTION__);
+
 	/* Shared interrupts and IRQ off? */
 	if (priv->read_reg(priv, REG_IER) == IRQ_OFF)
 		return IRQ_NONE;
@@ -503,6 +517,7 @@ static int sja1000_open(struct net_device *dev)
 {
 	struct sja1000_priv *priv = netdev_priv(dev);
 	int err;
+	lsd_can_dbg(LSD_DBG,"enter sja1000 open\n");
 
 	/* set chip into reset mode */
 	set_reset_mode(dev);
@@ -510,15 +525,28 @@ static int sja1000_open(struct net_device *dev)
 	/* common open */
 	err = open_candev(dev);
 	if (err)
+	{
+		lsd_can_dbg(LSD_ERR,"open_candev err\n");
 		return err;
+	}
+	else
+	{
+		lsd_can_dbg(LSD_DBG,"open_candev ok\n");
+	}
 
 	/* register interrupt handler, if not done by the device driver */
 	if (!(priv->flags & SJA1000_CUSTOM_IRQ_HANDLER)) {
+		lsd_can_dbg(LSD_DBG,"no SJA1000_CUSTOM_IRQ_HANDLER\n");
 		err = request_irq(dev->irq, sja1000_interrupt, priv->irq_flags,
 				  dev->name, (void *)dev);
 		if (err) {
+			lsd_can_dbg(LSD_ERR,"request_irq error\n");
 			close_candev(dev);
 			return -EAGAIN;
+		}
+		else
+		{
+			lsd_can_dbg(LSD_OK,"request_irq ok\n");
 		}
 	}
 
@@ -527,7 +555,7 @@ static int sja1000_open(struct net_device *dev)
 	priv->open_time = jiffies;
 
 	netif_start_queue(dev);
-
+	lsd_can_dbg(LSD_DBG,"at sja1000_open last\n");
 	return 0;
 }
 
@@ -535,6 +563,7 @@ static int sja1000_close(struct net_device *dev)
 {
 	struct sja1000_priv *priv = netdev_priv(dev);
 
+	lsd_can_dbg(LSD_DBG,"enter func=%s\n",__FUNCTION__);
 	netif_stop_queue(dev);
 	set_reset_mode(dev);
 
@@ -553,6 +582,7 @@ struct net_device *alloc_sja1000dev(int sizeof_priv)
 	struct net_device *dev;
 	struct sja1000_priv *priv;
 
+	lsd_can_dbg(LSD_DBG,"enter func=%s\n",__FUNCTION__);
 	dev = alloc_candev(sizeof(struct sja1000_priv) + sizeof_priv,
 		SJA1000_ECHO_SKB_MAX);
 	if (!dev)
@@ -574,6 +604,7 @@ EXPORT_SYMBOL_GPL(alloc_sja1000dev);
 
 void free_sja1000dev(struct net_device *dev)
 {
+	lsd_can_dbg(LSD_DBG,"enter func=%s\n",__FUNCTION__);
 	free_candev(dev);
 }
 EXPORT_SYMBOL_GPL(free_sja1000dev);
@@ -586,6 +617,7 @@ static const struct net_device_ops sja1000_netdev_ops = {
 
 int register_sja1000dev(struct net_device *dev)
 {
+	lsd_can_dbg(LSD_DBG,"enter func=%s\n",__FUNCTION__);
 	if (!sja1000_probe_chip(dev))
 		return -ENODEV;
 
@@ -601,6 +633,7 @@ EXPORT_SYMBOL_GPL(register_sja1000dev);
 
 void unregister_sja1000dev(struct net_device *dev)
 {
+	lsd_can_dbg(LSD_DBG,"enter func=%s\n",__FUNCTION__);
 	set_reset_mode(dev);
 	unregister_candev(dev);
 }
@@ -608,8 +641,9 @@ EXPORT_SYMBOL_GPL(unregister_sja1000dev);
 
 static __init int sja1000_init(void)
 {
+	lsd_can_dbg(LSD_DBG,"enter func=%s\n",__FUNCTION__);	
 	printk(KERN_INFO "%s CAN netdevice driver\n", DRV_NAME);
-
+	
 	return 0;
 }
 

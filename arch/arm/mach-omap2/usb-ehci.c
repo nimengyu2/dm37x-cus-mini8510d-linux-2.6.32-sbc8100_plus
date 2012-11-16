@@ -74,6 +74,7 @@ static void setup_ehci_io_mux(enum ehci_hcd_omap_mode *port_mode)
 {
 	switch (port_mode[0]) {
 	case EHCI_HCD_OMAP_MODE_PHY:
+		#if 0		
 		omap_mux_init_signal("hsusb1_stp", OMAP_PIN_OUTPUT);
 		omap_mux_init_signal("hsusb1_clk", OMAP_PIN_OUTPUT);
 		omap_mux_init_signal("hsusb1_dir", OMAP_PIN_INPUT_PULLDOWN);
@@ -86,6 +87,7 @@ static void setup_ehci_io_mux(enum ehci_hcd_omap_mode *port_mode)
 		omap_mux_init_signal("hsusb1_data5", OMAP_PIN_INPUT_PULLDOWN);
 		omap_mux_init_signal("hsusb1_data6", OMAP_PIN_INPUT_PULLDOWN);
 		omap_mux_init_signal("hsusb1_data7", OMAP_PIN_INPUT_PULLDOWN);
+		#endif
 		break;
 	case EHCI_HCD_OMAP_MODE_TLL:
 		omap_mux_init_signal("hsusb1_tll_stp",
@@ -121,6 +123,7 @@ static void setup_ehci_io_mux(enum ehci_hcd_omap_mode *port_mode)
 
 	switch (port_mode[1]) {
 	case EHCI_HCD_OMAP_MODE_PHY:
+		#if 0
 		omap_mux_init_signal("hsusb2_stp", OMAP_PIN_OUTPUT);
 		omap_mux_init_signal("hsusb2_clk", OMAP_PIN_OUTPUT);
 		omap_mux_init_signal("hsusb2_dir", OMAP_PIN_INPUT_PULLDOWN);
@@ -141,6 +144,7 @@ static void setup_ehci_io_mux(enum ehci_hcd_omap_mode *port_mode)
 			OMAP_PIN_INPUT_PULLDOWN);
 		omap_mux_init_signal("hsusb2_data7",
 			OMAP_PIN_INPUT_PULLDOWN);
+		#endif
 		break;
 	case EHCI_HCD_OMAP_MODE_TLL:
 		omap_mux_init_signal("hsusb2_tll_stp",
