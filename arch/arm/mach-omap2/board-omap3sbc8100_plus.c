@@ -790,7 +790,7 @@ static struct resource pcm970_sja1000_resources[] = {
 
 
 static struct sja1000_platform_data pcm970_sja1000_platform_data = {
-	.clock	= 16000000,
+	.clock	= 16000000 / 2,
 	.ocr		= OCR_TX1_PULLDOWN | OCR_TX0_PUSHPULL,
 	.cdr		= CDR_CBP,
 };
@@ -1138,8 +1138,8 @@ static struct platform_device *omap3_sbc8100_plus_devices[] __initdata = {
 	&keys_gpio,
 	&sbc8100_plus_dss_device,
 	&omap3sbc8100_plus_dm9000_device,
-	//&pcm970_sja1000,
-	//&pcm970_sja10002,
+	&pcm970_sja1000,
+	&pcm970_sja10002,
 };
 
 static void __init omap3sbc8100_plus_flash_init(void)
@@ -1254,8 +1254,8 @@ static void __init omap3_sbc8100_plus_init(void)
 
 	omap3_sbc8100_plus_display_init();
 	omap3sbc8100_plus_init_dm9000();
-	//omap3sbc8100_plus_init_sja1000();
-	//omap3sbc8100_plus_init_sja10002();
+	omap3sbc8100_plus_init_sja1000();
+	omap3sbc8100_plus_init_sja10002();
 
 #ifdef CONFIG_USB_ANDROID
 	omap3evm_android_gadget_init();

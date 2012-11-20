@@ -56,7 +56,7 @@
 
 /* SJA1000 registers - manual section 6.4 (Pelican Mode) */
 #define REG_MOD		0x00
-#define REG_CMR		0x01
+#define REG_CMR		0x01 
 #define REG_SR		0x02
 #define REG_IR		0x03
 #define REG_IER		0x04

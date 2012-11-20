@@ -38,19 +38,22 @@ MODULE_AUTHOR("Sascha Hauer <s.hauer@pengutronix.de>");
 MODULE_DESCRIPTION("Socket-CAN driver for SJA1000 on the platform bus");
 MODULE_LICENSE("GPL v2");
 static u8 sp_read_tmp;
+static unsigned short sp_reg_tmp = 0;
 
 static u8 sp_read_reg(const struct sja1000_priv *priv, int reg)
 {
 	//u8 ret;
-	sp_read_tmp = ioread8(priv->reg_base + reg);
-	lsd_can_dbg(LSD_DBG,"%s:ioread8 priv->reg_base=0x%08x,reg=%d,data=0x%02x\n",__FUNCTION__,priv->reg_base,reg,sp_read_tmp);	
+	sp_reg_tmp = (reg << 1);
+	sp_read_tmp = ioread8(priv->reg_base + sp_reg_tmp);
+	lsd_can_dbg(LSD_DBG,"%s:ioread8 priv->reg_base=0x%08x,reg=%d-0x%02x,data=0x%02x\n",__FUNCTION__,priv->reg_base,reg,reg,sp_read_tmp);	
 	return sp_read_tmp;
 }
 
 static void sp_write_reg(const struct sja1000_priv *priv, int reg, u8 val)
 {	
-	iowrite8(val, priv->reg_base + reg);
-	lsd_can_dbg(LSD_DBG,"%s,priv->reg_base=0x%08x,reg=%d,val=0x%02x\n",__FUNCTION__,priv->reg_base,reg,val);	
+	sp_reg_tmp = (reg << 1);
+	iowrite8(val, priv->reg_base + sp_reg_tmp);
+	lsd_can_dbg(LSD_DBG,"%s,priv->reg_base=0x%08x,reg=%d-0x%02x,val=0x%02x\n",__FUNCTION__,priv->reg_base,reg,reg,val);	
 }
 
 static int sp_probe(struct platform_device *pdev)
