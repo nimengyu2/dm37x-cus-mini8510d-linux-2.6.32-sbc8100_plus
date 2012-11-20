@@ -790,7 +790,7 @@ static struct resource pcm970_sja1000_resources[] = {
 
 
 static struct sja1000_platform_data pcm970_sja1000_platform_data = {
-	.clock	= 16000000 / 2,
+	.clock	= 16000000,
 	.ocr		= OCR_TX1_PULLDOWN | OCR_TX0_PUSHPULL,
 	.cdr		= CDR_CBP,
 };
@@ -806,17 +806,17 @@ static struct platform_device pcm970_sja1000 = {
 };
 
 
-#define CAN1_GPMC_CONFIG1	0x00001000
-#define CAN1_GPMC_CONFIG2	0x001e1e00
-#define CAN1_GPMC_CONFIG3	0x00080300
-#define CAN1_GPMC_CONFIG4	0x1c091c09
-#define CAN1_GPMC_CONFIG5	0x04181f1f
-#define CAN1_GPMC_CONFIG6	0x00000FCF
+#define CAN1_GPMC_CONFIG1	(0x03 | (1 << 4) | (1 << 9) | (0 << 10) | (0 << 12) | (0 << 27) | (0 << 29) | (0 << 30) | (0 << 28))
+#define CAN1_GPMC_CONFIG2	((0x1F << 16) | (0x1F << 8) | (1 << 7) | (0x00)) 
+#define CAN1_GPMC_CONFIG3	((0x1F << 16) | (0x1F << 8) | (0 << 7) | (0x2)) 
+#define CAN1_GPMC_CONFIG4	((0x18 << 24) | (1 << 23) | (0xF << 16) | (0x18 << 8) | (1 << 7) | (0xF << 0)) 
+#define CAN1_GPMC_CONFIG5	((0xF << 24) | (0x1F << 16) | (0x1F << 8) | (0x1F << 0)) 
+#define CAN1_GPMC_CONFIG6	((0x1F << 24) | (0x3 << 16) | (0xF << 8) | (1 << 7) | (1 << 6) | (0xF << 0))
 #define CAN1_GPMC_CONFIG7	0x00000f6E  // ¼´0x2E 0 00000
 
 #define GPMC_CS 6
 
-#if 0
+#if 1
 static const u32 gpmc_nor[7] = {
 	 CAN1_GPMC_CONFIG1,
 	 CAN1_GPMC_CONFIG2,
@@ -829,8 +829,10 @@ static const u32 gpmc_nor[7] = {
 #endif
 
 
+
+
 #if 0
-#define STNOR_GPMC_CONFIG1 0x00000003
+#define STNOR_GPMC_CONFIG1 0x03
 #define STNOR_GPMC_CONFIG2 0x001E1E01
 #define STNOR_GPMC_CONFIG3 0x000E0E02
 #define STNOR_GPMC_CONFIG4 0x1D0C1D0C
@@ -838,7 +840,7 @@ static const u32 gpmc_nor[7] = {
 #define STNOR_GPMC_CONFIG6 0x00000FCF
 
 static const u32 gpmc_nor[7] = {
-	 STNOR_GPMC_CONFIG1,
+	 CAN1_GPMC_CONFIG1,
 	 STNOR_GPMC_CONFIG2,
 	 STNOR_GPMC_CONFIG3,
 	 STNOR_GPMC_CONFIG4,
@@ -848,7 +850,7 @@ static const u32 gpmc_nor[7] = {
 };
 #endif
 
-#if 1
+#if 0
 #define STNOR_GPMC_CONFIG1 0x00001800
 #define STNOR_GPMC_CONFIG2 0x00141400
 #define STNOR_GPMC_CONFIG3 0x00141400
@@ -912,6 +914,22 @@ static void __init omap3sbc8100_plus_init_sja1000(void)
 	gpio_set_value(42,1);
 	//while(1);
 
+	unsigned long data_tmp;
+	data_tmp = gpmc_cs_read_reg(6, GPMC_CS_CONFIG1);
+	lsd_dbg(LSD_DBG,"gpmc_cs_read_reg 6,GPMC_CS_CONFIG1 =0x%08x\n", data_tmp);
+	data_tmp = gpmc_cs_read_reg(6, GPMC_CS_CONFIG2);
+	lsd_dbg(LSD_DBG,"gpmc_cs_read_reg 6,GPMC_CS_CONFIG2 =0x%08x\n", data_tmp);
+	data_tmp = gpmc_cs_read_reg(6, GPMC_CS_CONFIG3);
+	lsd_dbg(LSD_DBG,"gpmc_cs_read_reg 6,GPMC_CS_CONFIG3 =0x%08x\n", data_tmp);
+	data_tmp = gpmc_cs_read_reg(6, GPMC_CS_CONFIG4);
+	lsd_dbg(LSD_DBG,"gpmc_cs_read_reg 6,GPMC_CS_CONFIG4 =0x%08x\n", data_tmp);
+	data_tmp = gpmc_cs_read_reg(6, GPMC_CS_CONFIG5);
+	lsd_dbg(LSD_DBG,"gpmc_cs_read_reg 6,GPMC_CS_CONFIG5 =0x%08x\n", data_tmp);
+	data_tmp = gpmc_cs_read_reg(6, GPMC_CS_CONFIG6);
+	lsd_dbg(LSD_DBG,"gpmc_cs_read_reg 6,GPMC_CS_CONFIG6 =0x%08x\n", data_tmp);
+	data_tmp = gpmc_cs_read_reg(6, GPMC_CS_CONFIG7);
+	lsd_dbg(LSD_DBG,"gpmc_cs_read_reg 6,GPMC_CS_CONFIG7 =0x%08x\n", data_tmp);
+
 	
 }
 
@@ -967,12 +985,12 @@ static struct platform_device pcm970_sja10002 = {
 #define GPMC_CS2 7
 
 static const u32 gpmc_nor2[7] = {
-	 CAN2_GPMC_CONFIG1,
-	 CAN2_GPMC_CONFIG2,
-	 CAN2_GPMC_CONFIG3 ,
-	 CAN2_GPMC_CONFIG4,
-	 CAN2_GPMC_CONFIG5,
-	 CAN2_GPMC_CONFIG6, 
+	 CAN1_GPMC_CONFIG1,
+	 CAN1_GPMC_CONFIG2,
+	 CAN1_GPMC_CONFIG3 ,
+	 CAN1_GPMC_CONFIG4,
+	 CAN1_GPMC_CONFIG5,
+	 CAN1_GPMC_CONFIG6, 
 	 CAN2_GPMC_CONFIG7
 };
 
@@ -1073,6 +1091,7 @@ static struct platform_device omap3sbc8100_plus_dm9000_device = {
 
 static void __init omap3sbc8100_plus_init_dm9000(void)
 {
+	omap_mux_init_gpio(OMAP_DM9000_GPIO_IRQ, OMAP_PIN_INPUT_PULLUP);
         if (gpio_request(OMAP_DM9000_GPIO_IRQ, "dm9000 irq") < 0) {
                 printk(KERN_ERR "Failed to request GPIO%d for dm9000 IRQ\n",
                         OMAP_DM9000_GPIO_IRQ);
@@ -1119,7 +1138,7 @@ static struct platform_device *omap3_sbc8100_plus_devices[] __initdata = {
 	&keys_gpio,
 	&sbc8100_plus_dss_device,
 	&omap3sbc8100_plus_dm9000_device,
-	&pcm970_sja1000,
+	//&pcm970_sja1000,
 	//&pcm970_sja10002,
 };
 
@@ -1235,7 +1254,7 @@ static void __init omap3_sbc8100_plus_init(void)
 
 	omap3_sbc8100_plus_display_init();
 	omap3sbc8100_plus_init_dm9000();
-	omap3sbc8100_plus_init_sja1000();
+	//omap3sbc8100_plus_init_sja1000();
 	//omap3sbc8100_plus_init_sja10002();
 
 #ifdef CONFIG_USB_ANDROID
