@@ -907,11 +907,10 @@ static void __init omap3sbc8100_plus_init_sja1000(void)
 
 	udelay(100);
 
-	omap_mux_init_gpio(42, OMAP_PIN_OUTPUT);
+	omap_mux_init_gpio(42, OMAP_PIN_INPUT);
 	//omap_mux_init_signal("sdrc_cke0", OMAP_PIN_OUTPUT);
-	gpio_request(42, "sja1000");
-	gpio_direction_output(42,1);
-	gpio_set_value(42,1);
+	//gpio_direction_output(42,1);
+	//gpio_set_value(42,1);
 	//while(1);
 
 	unsigned long data_tmp;
@@ -940,7 +939,7 @@ static void __init omap3sbc8100_plus_init_sja1000(void)
 
 //--------------------------------------------------------------//
 // add gpmc-sja1000 2
-#define SJA1000_CS7_BASE_ADDR  0x30000000
+#define SJA1000_CS7_BASE_ADDR  0x2D000000
 #define OMAP_SJA10002_GPIO_IRQ    41
 
 static struct resource pcm970_sja10002_resources[] = {
@@ -980,7 +979,7 @@ static struct platform_device pcm970_sja10002 = {
 #define CAN2_GPMC_CONFIG4	0x1c091c09
 #define CAN2_GPMC_CONFIG5	0x04181f1f
 #define CAN2_GPMC_CONFIG6	0x00000FCF
-#define CAN2_GPMC_CONFIG7	0x00000f70  // ¼´0x30 0 00000
+#define CAN2_GPMC_CONFIG7	0x00000f6D  // ¼´0x2d 0 00000
 
 #define GPMC_CS2 7
 
