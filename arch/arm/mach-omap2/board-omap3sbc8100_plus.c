@@ -637,6 +637,15 @@ static struct i2c_board_info __initdata sbc8100_plus_i2c2_boardinfo[] = {
 #endif
 };
 
+static struct i2c_board_info __initdata sbc8100_plus_i2c3_boardinfo[] = {
+#if 1
+       {
+               I2C_BOARD_INFO("tvp5150", 0x5D),
+               //.platform_data = &tvp5146_pdata,
+       },
+#endif
+};
+
 static int __init omap3_sbc8100_plus_i2c_init(void)
 {
 	omap_register_i2c_bus(1, 2600, sbc8100_plus_i2c1_boardinfo,
@@ -645,7 +654,8 @@ static int __init omap3_sbc8100_plus_i2c_init(void)
 				ARRAY_SIZE(sbc8100_plus_i2c2_boardinfo));
 	/* Bus 3 is attached to the DVI port where devices like the pico DLP
 	 * projector don't work reliably with 400kHz */
-	omap_register_i2c_bus(3, 100, NULL, 0);
+	omap_register_i2c_bus(3, 100, sbc8100_plus_i2c3_boardinfo,
+				ARRAY_SIZE(sbc8100_plus_i2c3_boardinfo));
 	return 0;
 }
 

@@ -4,7 +4,7 @@
  * Copyright (c) 2005,2006 Mauro Carvalho Chehab (mchehab@infradead.org)
  * This code is placed under the terms of the GNU General Public License v2
  */
-
+#define DEBUG    1 
 #include <linux/i2c.h>
 #include <linux/videodev2.h>
 #include <linux/delay.h>
@@ -13,6 +13,7 @@
 #include <media/v4l2-i2c-drv.h>
 #include <media/v4l2-chip-ident.h>
 
+#include <linux/lierda_debug.h>
 #include "tvp5150_reg.h"
 
 MODULE_DESCRIPTION("Texas Instruments TVP5150A video decoder driver");
@@ -596,6 +597,7 @@ static int tvp5150_vdp_init(struct v4l2_subdev *sd,
 				const struct i2c_vbi_ram_value *regs)
 {
 	unsigned int i;
+	lsd_video_dbg(LSD_DBG,"enter func=%s\n",__FUNCTION__);
 
 	/* Disable Full Field */
 	tvp5150_write(sd, TVP5150_FULL_FIELD_ENA, 0);
@@ -660,6 +662,7 @@ static int tvp5150_set_vbi(struct v4l2_subdev *sd,
 	v4l2_std_id std = decoder->norm;
 	u8 reg;
 	int pos=0;
+	lsd_video_dbg(LSD_DBG,"enter func=%s\n",__FUNCTION__);
 
 	if (std == V4L2_STD_ALL) {
 		v4l2_err(sd, "VBI can't be configured without knowing number of lines\n");
@@ -778,6 +781,7 @@ static int tvp5150_reset(struct v4l2_subdev *sd, u32 val)
 {
 	struct tvp5150 *decoder = to_tvp5150(sd);
 	u8 msb_id, lsb_id, msb_rom, lsb_rom;
+	lsd_video_dbg(LSD_DBG,"enter func=%s\n",__FUNCTION__);
 
 	msb_id = tvp5150_read(sd, TVP5150_MSB_DEV_ID);
 	lsb_id = tvp5150_read(sd, TVP5150_LSB_DEV_ID);
@@ -883,7 +887,7 @@ static int tvp5150_s_routing(struct v4l2_subdev *sd,
 			     u32 input, u32 output, u32 config)
 {
 	struct tvp5150 *decoder = to_tvp5150(sd);
-
+	lsd_video_dbg(LSD_DBG,"enter func=%s\n",__FUNCTION__);
 	decoder->input = input;
 	decoder->output = output;
 	tvp5150_selmux(sd);
@@ -894,7 +898,7 @@ static int tvp5150_s_fmt(struct v4l2_subdev *sd, struct v4l2_format *fmt)
 {
 	struct v4l2_sliced_vbi_format *svbi;
 	int i;
-
+	lsd_video_dbg(LSD_DBG,"enter func=%s\n",__FUNCTION__);
 	/* raw vbi */
 	if (fmt->type == V4L2_BUF_TYPE_VBI_CAPTURE) {
 		/* this is for capturing 36 raw vbi lines
@@ -940,6 +944,7 @@ static int tvp5150_g_fmt(struct v4l2_subdev *sd, struct v4l2_format *fmt)
 {
 	struct v4l2_sliced_vbi_format *svbi;
 	int i, mask = 0;
+	lsd_video_dbg(LSD_DBG,"enter func=%s\n",__FUNCTION__);
 
 	if (fmt->type != V4L2_BUF_TYPE_SLICED_VBI_CAPTURE)
 		return -EINVAL;
@@ -961,7 +966,7 @@ static int tvp5150_g_chip_ident(struct v4l2_subdev *sd,
 {
 	int rev;
 	struct i2c_client *client = v4l2_get_subdevdata(sd);
-
+	lsd_video_dbg(LSD_DBG,"enter func=%s\n",__FUNCTION__);
 	rev = tvp5150_read(sd, TVP5150_ROM_MAJOR_VER) << 8 |
 	      tvp5150_read(sd, TVP5150_ROM_MINOR_VER);
 
@@ -974,7 +979,7 @@ static int tvp5150_g_chip_ident(struct v4l2_subdev *sd,
 static int tvp5150_g_register(struct v4l2_subdev *sd, struct v4l2_dbg_register *reg)
 {
 	struct i2c_client *client = v4l2_get_subdevdata(sd);
-
+	lsd_video_dbg(LSD_DBG,"enter func=%s\n",__FUNCTION__);
 	if (!v4l2_chip_match_i2c_client(client, &reg->match))
 		return -EINVAL;
 	if (!capable(CAP_SYS_ADMIN))
@@ -987,7 +992,7 @@ static int tvp5150_g_register(struct v4l2_subdev *sd, struct v4l2_dbg_register *
 static int tvp5150_s_register(struct v4l2_subdev *sd, struct v4l2_dbg_register *reg)
 {
 	struct i2c_client *client = v4l2_get_subdevdata(sd);
-
+	lsd_video_dbg(LSD_DBG,"enter func=%s\n",__FUNCTION__);
 	if (!v4l2_chip_match_i2c_client(client, &reg->match))
 		return -EINVAL;
 	if (!capable(CAP_SYS_ADMIN))
@@ -1065,15 +1070,30 @@ static int tvp5150_probe(struct i2c_client *c,
 	struct tvp5150 *core;
 	struct v4l2_subdev *sd;
 
+	lsd_video_dbg(LSD_DBG,"enter func=%s\n",__FUNCTION__);
+
 	/* Check if the adapter supports the needed features */
 	if (!i2c_check_functionality(c->adapter,
 	     I2C_FUNC_SMBUS_READ_BYTE | I2C_FUNC_SMBUS_WRITE_BYTE_DATA))
+	{
+		lsd_video_dbg(LSD_ERR,"adapter not supports the needed features\n");
 		return -EIO;
-
+	}
+	else
+	{
+		lsd_video_dbg(LSD_OK,"adapter is supports the needed features\n");
+	}
+	
 	core = kzalloc(sizeof(struct tvp5150), GFP_KERNEL);
 	if (!core) {
+		lsd_video_dbg(LSD_ERR,"kzalloc error\n");
 		return -ENOMEM;
 	}
+	else
+	{
+		lsd_video_dbg(LSD_OK,"kzalloc ok\n");
+	}
+
 	sd = &core->sd;
 	v4l2_i2c_subdev_init(sd, c, &tvp5150_ops);
 	v4l_info(c, "chip found @ 0x%02x (%s)\n",
