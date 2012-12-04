@@ -101,22 +101,25 @@ int v4l2_int_ioctl_1(struct v4l2_int_device *d, int cmd, void *arg);
  */
 
 enum v4l2_power {
-	V4L2_POWER_OFF = 0,
-	V4L2_POWER_ON,
-	V4L2_POWER_STANDBY,
+	V4L2_POWER_OFF = 0,  // 电源关闭
+	V4L2_POWER_ON,  //  电源开启
+	V4L2_POWER_STANDBY,  // 电源标准
 };
 
 /* Slave interface type. */
+// 从接口类型
 enum v4l2_if_type {
 	/*
 	 * Parallel 8-, 10- or 12-bit interface, used by for example
 	 * on certain image sensors.
 	 */
-	V4L2_IF_TYPE_BT656,
+	 // 并行 8  10  12 bit接口 
+	V4L2_IF_TYPE_BT656,   
 	V4L2_IF_TYPE_YCbCr,
 	V4L2_IF_TYPE_RAW,
 };
 
+// bt656模式
 enum v4l2_if_type_bt656_mode {
 	/*
 	 * Modes without Bt synchronisation codes. Separate
@@ -215,8 +218,9 @@ struct v4l2_if_type_raw {
 	u32 clock_curr;
 };
 
+// v4l2接口 
 struct v4l2_ifparm {
-	enum v4l2_if_type if_type;
+	enum v4l2_if_type if_type;  // 接口类型
 	union {
 		struct v4l2_if_type_bt656 bt656;
 		struct v4l2_if_type_ycbcr ycbcr;

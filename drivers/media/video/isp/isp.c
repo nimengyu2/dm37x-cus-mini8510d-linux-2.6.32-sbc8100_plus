@@ -787,6 +787,16 @@ static int isp_init_csi(struct device *dev, struct isp_interface_config *config)
 	return 0;
 }
 
+// isp配置接口 配置isp控制 if相关的参数
+// 参数dev  指向omap3的isp设备
+// 参数config 指向结构体包含希望的isp配置
+// 配置isp控制寄存器 ISP_CTRL 通过配置结构体的内部的指定的值
+// 指定并行或者串行输入
+// 数据线偏移
+// pclk极性
+// 8到16宽度 ccdc模块的输入
+// hs vs同步信号检测
+// 如果成功则返回0 否则返回负数表示错误编码
 /**
  * isp_configure_interface - Configures ISP Control I/F related parameters.
  * @dev: Device pointer specific to the OMAP3 ISP.
@@ -810,7 +820,7 @@ int isp_configure_interface(struct device *dev,
 	u32 ispctrl_val = isp_reg_readl(dev, OMAP3_ISP_IOMEM_MAIN, ISP_CTRL);
 	u32 fmtcfg;
 	int r;
-
+	// isp接口的配置信息
 	isp->config = config;
 
 	ispctrl_val &= ISPCTRL_SHIFT_MASK;

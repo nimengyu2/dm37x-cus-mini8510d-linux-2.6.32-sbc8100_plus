@@ -45,7 +45,7 @@
 #define OMAP34XXCAM_XCLK_A	0
 #define OMAP34XXCAM_XCLK_B	1
 
-#define OMAP34XXCAM_SLAVE_SENSOR	0
+#define OMAP34XXCAM_SLAVE_SENSOR	0   // 摄像头 从机  传感器
 #define OMAP34XXCAM_SLAVE_LENS		1
 #define OMAP34XXCAM_SLAVE_FLASH		2 /* This is the last slave! */
 
@@ -70,10 +70,11 @@ struct omap34xxcam_videodev;
  * @capture_mem: Size limit to mmap buffers.
  * @ival_default: Default frame interval for sensor.
  */
+ 
 struct omap34xxcam_sensor_config {
-	int sensor_isp;
-	u32 capture_mem;
-	struct v4l2_fract ival_default;
+	int sensor_isp;  // 传感器是 smart soc 还是 raw
+	u32 capture_mem;  // 映射缓冲区的大小限制
+	struct v4l2_fract ival_default;  // 传感器默认帧间隔 
 };
 
 struct omap34xxcam_lens_config {
@@ -82,12 +83,13 @@ struct omap34xxcam_lens_config {
 struct omap34xxcam_flash_config {
 };
 
+// omap34xx cam硬件配置
 struct omap34xxcam_hw_config {
-	int dev_index; /* Index in omap34xxcam_sensors */
-	int dev_minor; /* Video device minor number */
-	int dev_type; /* OMAP34XXCAM_SLAVE_* */
-	union {
-		struct omap34xxcam_sensor_config sensor;
+	int dev_index; /* Index in omap34xxcam_sensors */  // omap34摄像头传感器 序号
+	int dev_minor; /* Video device minor number */  // 摄像头设备 小号
+	int dev_type; /* OMAP34XXCAM_SLAVE_* */   
+	union {  // 集合
+		struct omap34xxcam_sensor_config sensor;  // 传感器配置
 		struct omap34xxcam_lens_config lens;
 		struct omap34xxcam_flash_config flash;
 	} u;

@@ -92,9 +92,10 @@ enum isp_mem_resources {
 	OMAP3_ISP_IOMEM_CSI2PHY
 };
 
+// isp接口类型
 enum isp_interface_type {
-	ISP_PARLL = 1,
-	ISP_CSIA = 2,
+	ISP_PARLL = 1,  // 并行
+	ISP_CSIA = 2,  // 
 	ISP_CSIB = 4,
 	ISP_PARLL_YUV_BT = 8,
 	ISP_NONE = 16 /* memory input to preview / resizer */
@@ -153,40 +154,75 @@ struct isp_reg {
 	u32 val;
 };
 
+
+
+
+//      
+// isp接口配置
 /**
  * struct isp_interface_config - ISP interface configuration.
  * @ccdc_par_ser: ISP interface type. 0 - Parallel, 1 - CSIA, 2 - CSIB to CCDC.
+// 参数ccdc_par_ser isp接口类型  
+//      0 = 并行
+//      1 csia
+//      2 csib ccdc
  * @dataline_shift: Data lane shifter.
  *                      0 - No Shift, 1 - CAMEXT[13 to 2]->CAM[11 to 0]
  *                      2 - CAMEXT[13 to 4]->CAM[9 to 0]
  *                      3 - CAMEXT[13 to 6]->CAM[7 to 0]
+// 参数dataline_shift  数据线偏移
+//      0  没有偏移
+//      1  camext13-2  对应 cam11-0
+//      2  camext13-4  对应 cam9-0
+//      3  camext13-6  对应 cam7-0
  * @hsvs_syncdetect: HS or VS synchronization signal detection.
  *                       0 - HS Falling, 1 - HS rising
  *                       2 - VS falling, 3 - VS rising
+ // 参数hsvs_syncdetect hs或者vs同步型号检测
+ //                0   hs下降沿
+ //                1   hs 上升沿
+ //                2   vs下降沿
+ //                3   vs上升沿
  * @strobe: Strobe related parameter.
+ //  参数 strobe  表示 strobe相关的参数
  * @prestrobe: PreStrobe related parameter.
+ // 参数 prestrobe 表示 prestrobe相关参数
  * @shutter: Shutter related parameter.
+ // 参数shutter 表示 shutter相关参数
  * @prev_sph: Horizontal Start Pixel performed in Preview module.
+ // 参数prev_sph 行起始像素点在上一个执行的模块
  * @prev_slv: Vertical Start Line performed in Preview module.
+ // 参数prev_slv 帧其实像素执行在上一次的模组中
  * @wenlog: Store the value for the sensor specific wenlog field.
+ // 参数wenlog  存储传感器指定的wenlog区域的参数
  * @wait_hs_vs: Wait for this many hs_vs before anything else in the beginning.
+ // 参数wait_hs_vs 在开始的时候等待多少个hs_vs
  * @pixelclk: Pixel data rate from sensor.
+ // 参数pixelclk 传感器的pclk
  * @par_bridge: CCDC Bridge input control. Parallel interface.
  *                  0 - Disable, 1 - Enable, first byte->cam_d(bits 7 to 0)
  *                  2 - Enable, first byte -> cam_d(bits 15 to 8)
+ // 参数par_bridge ccdc桥输入控制，并行接口
+ //            0  禁止
+ //            1  使能  第一个字节  cam_d[7:0]
+ //            2 使能 第一个字节  cam_d[15:8]
  * @par_clk_pol: Pixel clock polarity on the parallel interface.
  *                    0 - Non Inverted, 1 - Inverted
+ // 参数par_clk_pol 像素点时钟极性在并行接口上
+ //              0  没有反转
+ //              1  反转
  * @crc: Use cyclic redundancy check.
- * @mode: (?)
- * @edge: Falling or rising edge
- * @signalling: Use strobe mode (only valid for CCP2 mode)
- * @strobe_clock_inv: Strobe/clock signal inversion.
- * @vs_edge: Type of edge used for detecting VSync signal.
- * @channel: Logical channel number used in transmission.
- * @vpclk: Video port output clock.
- * @data_start: Start vertical position of the region of interest.
- * @data_size: Vertical size of the region of interest.
- * @format: V4L2 format which matches with the transmitted frame data.
+ // 参数crc  使用校准
+ * @mode: (?)  // 模式
+ * @edge: Falling or rising edge // 触发边沿  上升沿或者下降沿
+ * @signalling: Use strobe mode (only valid for CCP2 mode)  // 信号
+ * @strobe_clock_inv: Strobe/clock signal inversion.  // strobe 锁存信号反转
+ * @vs_edge: Type of edge used for detecting VSync signal.  // 检测vs信号的边沿极性
+ * @channel: Logical channel number used in transmission. // 传输过程中的逻辑通道
+ * @vpclk: Video port output clock.  // 视频通道输出时钟
+ * @data_start: Start vertical position of the region of interest. // 起始帧位置
+ * @data_size: Vertical size of the region of interest.  // 帧大小
+ * @format: V4L2 format which matches with the transmitted frame data. // v4l2格式
  */
 struct isp_interface_config {
 	enum isp_interface_type ccdc_par_ser;

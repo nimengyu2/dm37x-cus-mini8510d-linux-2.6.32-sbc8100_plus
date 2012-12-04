@@ -580,11 +580,13 @@ static struct twl4030_keypad_data sbc8100_plus_kp_data = {
 #endif
 };
 
+// pmu的数据结构体
 static struct twl4030_platform_data sbc8100_plus_twldata = {
 	.irq_base	= TWL4030_IRQ_BASE,
 	.irq_end	= TWL4030_IRQ_END,
 
 	/* platform_data for children goes here */
+	// platform_data用于子结构体
 	.keypad		= &sbc8100_plus_kp_data,
 	.usb		= &sbc8100_plus_usb_data,
 	.gpio		= &sbc8100_plus_gpio_data,
@@ -597,7 +599,9 @@ static struct twl4030_platform_data sbc8100_plus_twldata = {
 	.vpll2		= &sbc8100_plus_vpll2,
 };
 
+// iic1
 static struct i2c_board_info __initdata sbc8100_plus_i2c1_boardinfo[] = {
+	// pmu 电源芯片
 	{
 		I2C_BOARD_INFO("twl4030", 0x48),
 		.flags = I2C_CLIENT_WAKE,
@@ -620,13 +624,16 @@ extern struct ov2656_platform_data sbc8100_plus_ov2656_platform_data;
 
 extern void sbc8100_plus_cam_init(void);
 
+// 挂载在iic2上的设备
 static struct i2c_board_info __initdata sbc8100_plus_i2c2_boardinfo[] = {
+// 模拟摄像头的解码芯片 tvp5146
 #if defined(CONFIG_VIDEO_TVP514X) || defined(CONFIG_VIDEO_TVP514X_MODULE)
-       {
+	{
                I2C_BOARD_INFO("tvp5146m2", 0x5D),
                .platform_data = &tvp5146_pdata,
        },
 #endif
+// 数字摄像头 ov2656 这个摄像头
 #if defined(CONFIG_VIDEO_OV2656) || defined(CONFIG_VIDEO_OV2656_MODULE)
        {
                I2C_BOARD_INFO("ov2656", OV2656_I2C_ADDR),
@@ -637,22 +644,27 @@ static struct i2c_board_info __initdata sbc8100_plus_i2c2_boardinfo[] = {
 
 static int __init omap3_sbc8100_plus_i2c_init(void)
 {
+	// 这里初始化3个iic
+	// iic1
 	omap_register_i2c_bus(1, 2600, sbc8100_plus_i2c1_boardinfo,
 			ARRAY_SIZE(sbc8100_plus_i2c1_boardinfo));
+	// iic2
 	omap_register_i2c_bus(2, 400,  sbc8100_plus_i2c2_boardinfo,
 				ARRAY_SIZE(sbc8100_plus_i2c2_boardinfo));
 	/* Bus 3 is attached to the DVI port where devices like the pico DLP
 	 * projector don't work reliably with 400kHz */
+	// iic3
 	omap_register_i2c_bus(3, 100, NULL, 0);
 	return 0;
 }
 
+// gpio led 
 static struct gpio_led gpio_leds[] = {
         {
                 .name                   = "led0",
                 .default_trigger        = "heartbeat",
                 .gpio                   = 136,
-                .active_low             = true,
+                .active_low             = true,  // 低有效
         },
         {
                 .name                   = "led1",
@@ -685,6 +697,7 @@ static struct platform_device leds_gpio = {
 	},
 };
 
+// gpio key按钮  
 static struct gpio_keys_button gpio_buttons[] = {
         {
                 .code                   = KEY_F1/*KEY_MENU*/,
@@ -700,23 +713,27 @@ static struct gpio_keys_button gpio_buttons[] = {
         },
 };
 
+// gpio 按键平台数据
 static struct gpio_keys_platform_data gpio_key_info = {
-	.buttons	= gpio_buttons,
+	.buttons	= gpio_buttons,  
 	.nbuttons	= ARRAY_SIZE(gpio_buttons),
 };
 
+// 按键平台设备
 static struct platform_device keys_gpio = {
 	.name	= "gpio-keys",
 	.id	= -1,
 	.dev	= {
-		.platform_data	= &gpio_key_info,
+		.platform_data	= &gpio_key_info,// 平台数据
 	},
 };
 
 #define OMAP3_SBC8100_PLUS_TS_GPIO       27
 
+// ads7846设备初始化
 static void ads7846_dev_init(void)
 {
+	// 请求gpio 用于中断引脚
 	if (gpio_request(OMAP3_SBC8100_PLUS_TS_GPIO, "ADS7846 pendown") < 0)
 		printk(KERN_ERR "can't get ads7846 pen down GPIO\n");
 
@@ -726,45 +743,50 @@ static void ads7846_dev_init(void)
 	omap_set_gpio_debounce_time(OMAP3_SBC8100_PLUS_TS_GPIO, 0xa);
 }
 
+// 获取pen down的状态
 static int ads7846_get_pendown_state(void)
 {
+	// 返回gpio口的状态
 	return !gpio_get_value(OMAP3_SBC8100_PLUS_TS_GPIO);
 }
 
+// ads7846配置
 struct ads7846_platform_data ads7846_config = {
 #ifdef CONFIG_ADS_SCALED_EV
-        .x_max                  = 800,
-        .y_max                  = 480,
+        .x_max                  = 800,  // 触摸屏x
+        .y_max                  = 480,  // 触摸屏y
 #else
 	.x_max			= 0x0fff,
 	.y_max			= 0x0fff,
 #endif
 //	.x_plate_ohms		= 180,
 //	.pressure_max		= 255,
-	.debounce_max		= 10,
+	.debounce_max		= 10,  
 	.debounce_tol		= 5,
-	.debounce_rep		= 1,
-	.get_pendown_state	= ads7846_get_pendown_state,
-	.keep_vref_on		= 1,
-	.settle_delay_usecs	= 150,
-	.wakeup			= true,
-        .swap_xy                = 1,
+	.debounce_rep		= 1,  // 
+	.get_pendown_state	= ads7846_get_pendown_state,  // 获取pen down的数据
+	.keep_vref_on		= 1,   // 保持基准
+	.settle_delay_usecs	= 150,  // 
+	.wakeup			= true,  // 是否可以唤醒
+        .swap_xy                = 1,  // 交换xy
 };
 
+// spi配置
 static struct omap2_mcspi_device_config ads7846_mcspi_config = {
-	.turbo_mode	= 0,
-	.single_channel	= 1,	/* 0: slave, 1: master */
+	.turbo_mode	= 0,  // 
+	.single_channel	= 1,	/* 0: slave, 1: master */  // 从机
 };
 
+// spi 板子 信息初始化
 struct spi_board_info omap3sbc8100_plus_spi_board_info[] = {
 	[0] = {
-		.modalias		= "ads7846",
-		.bus_num		= 2,
-		.chip_select		= 0,
-		.max_speed_hz		= 1500000,
-		.controller_data	= &ads7846_mcspi_config,
-		.irq			= OMAP_GPIO_IRQ(OMAP3_SBC8100_PLUS_TS_GPIO),
-		.platform_data		= &ads7846_config,
+		.modalias		= "ads7846",  // 这个是spi接口的触摸屏芯片
+		.bus_num		= 2,  // 总线号
+		.chip_select		= 0,  // 片选0
+		.max_speed_hz		= 1500000,  // 最大clk频率
+		.controller_data	= &ads7846_mcspi_config, // spi配置
+		.irq			= OMAP_GPIO_IRQ(OMAP3_SBC8100_PLUS_TS_GPIO),// 中断号
+		.platform_data		= &ads7846_config, // 平台设备 配置
 	},
 };
 
@@ -931,27 +953,39 @@ static struct omap_board_mux board_mux[] __initdata = {
 
 static void __init omap3_sbc8100_plus_init(void)
 {
+	// mux初始化
 	omap3_mux_init(board_mux, OMAP_PACKAGE_CBB);
+	// iic初始化
 	omap3_sbc8100_plus_i2c_init();
 	platform_add_devices(omap3_sbc8100_plus_devices,
 			ARRAY_SIZE(omap3_sbc8100_plus_devices));
-        spi_register_board_info(omap3sbc8100_plus_spi_board_info,
+	// 注册spi驱动
+    spi_register_board_info(omap3sbc8100_plus_spi_board_info,
                                 ARRAY_SIZE(omap3sbc8100_plus_spi_board_info));
+	// 串口初始化
 	omap_serial_init();
 
+	// usb 初始化 作为主机模式的
 	usb_musb_init();
+	// usb 初始化 这个是otg接口的
 	usb_ehci_init(&ehci_pdata);
+	// nand flash初始化
 	omap3sbc8100_plus_flash_init();
 
 	/* Ensure SDRC pins are mux'd for self-refresh */
+	// 确保sdrc引脚 用于自刷新模式的
+	// sdrc_cke0 sdrc_cke1
 	omap_mux_init_signal("sdrc_cke0", OMAP_PIN_OUTPUT);
 	omap_mux_init_signal("sdrc_cke1", OMAP_PIN_OUTPUT);
 
+	// 初始化显示子系统
 	omap3_sbc8100_plus_display_init();
+	// 初始化dm9000
 	omap3sbc8100_plus_init_dm9000();
 #ifdef CONFIG_USB_ANDROID
 	omap3evm_android_gadget_init();
 #endif
+	// cam初始化
 	sbc8100_plus_cam_init();	
 }
 static void __init omap3_sbc8100_plus_map_io(void)

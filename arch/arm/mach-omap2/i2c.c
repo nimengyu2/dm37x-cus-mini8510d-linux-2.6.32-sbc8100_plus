@@ -24,7 +24,8 @@
 #include <plat/mux.h>
 
 #include "mux.h"
-
+// 初始化iic总线
+// 输入参数clkrate  iic的速率
 int __init omap_register_i2c_bus(int bus_id, u32 clkrate,
 			  struct i2c_board_info const *info,
 			  unsigned len)
@@ -38,6 +39,7 @@ int __init omap_register_i2c_bus(int bus_id, u32 clkrate,
 
 		scl = omap24xx_pins[bus_id - 1][0];
 		sda = omap24xx_pins[bus_id - 1][1];
+		// iic引脚配置
 		omap_cfg_reg(sda);
 		omap_cfg_reg(scl);
 	}
