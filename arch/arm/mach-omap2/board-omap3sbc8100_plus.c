@@ -773,7 +773,7 @@ struct spi_board_info omap3sbc8100_plus_spi_board_info[] = {
 //--------------------------------------------------------------//
 // add gpmc-sja1000 
 #define SJA1000_CS6_BASE_ADDR  0x2E000000
-#define OMAP_SJA1000_GPIO_IRQ    40
+#define OMAP_SJA1000_GPIO_IRQ    42
 
 static struct resource pcm970_sja1000_resources[] = {
 	{
@@ -790,7 +790,7 @@ static struct resource pcm970_sja1000_resources[] = {
 
 
 static struct sja1000_platform_data pcm970_sja1000_platform_data = {
-	.clock	= 16000000 / 2,
+	.clock	= 24000000 / 2,
 	.ocr		= OCR_TX1_PULLDOWN | OCR_TX0_PUSHPULL,
 	.cdr		= CDR_CBP,
 };
@@ -907,7 +907,7 @@ static void __init omap3sbc8100_plus_init_sja1000(void)
 
 	udelay(100);
 
-	omap_mux_init_gpio(42, OMAP_PIN_INPUT);
+	//omap_mux_init_gpio(42, OMAP_PIN_INPUT);
 	//omap_mux_init_signal("sdrc_cke0", OMAP_PIN_OUTPUT);
 	//gpio_direction_output(42,1);
 	//gpio_set_value(42,1);
@@ -957,7 +957,7 @@ static struct resource pcm970_sja10002_resources[] = {
 
 
 static struct sja1000_platform_data pcm970_sja10002_platform_data = {
-	.clock	= 16000000 / 2,
+	.clock	= 24000000 / 2,
 	.ocr		= OCR_TX1_PULLDOWN | OCR_TX0_PUSHPULL,
 	.cdr		= CDR_CBP,
 };
@@ -998,16 +998,16 @@ static void __init omap3sbc8100_plus_init_sja10002(void)
 	lsd_can_dbg(LSD_DBG,"enter func omap3sbc81002_plus_init_sja1000\n");	
 	
 
-	omap_mux_init_gpio(OMAP_SJA10002_GPIO_IRQ, OMAP_PIN_OUTPUT);
+	//omap_mux_init_gpio(OMAP_SJA10002_GPIO_IRQ, OMAP_PIN_OUTPUT);
 	//omap_mux_init_signal("sdrc_cke0", OMAP_PIN_OUTPUT);
-	gpio_request(OMAP_SJA10002_GPIO_IRQ, "sja10002");
-	gpio_direction_output(OMAP_SJA10002_GPIO_IRQ,1);
-	gpio_set_value(OMAP_SJA10002_GPIO_IRQ,1);
+	//gpio_request(OMAP_SJA10002_GPIO_IRQ, "sja10002");
+	//gpio_direction_output(OMAP_SJA10002_GPIO_IRQ,1);
+	//gpio_set_value(OMAP_SJA10002_GPIO_IRQ,1);
 
 	omap_mux_init_gpio(OMAP_SJA10002_GPIO_IRQ, OMAP_PIN_INPUT_PULLUP);
 	//omap_mux_init_gpio(40, OMAP_PIN_INPUT);
 
-#if 0
+#if 1
         if (gpio_request(OMAP_SJA10002_GPIO_IRQ, "sja1000 irq") < 0) {
                 printk(KERN_ERR "Failed to request GPIO%d for sja10002 IRQ\n",
                         OMAP_SJA10002_GPIO_IRQ);
