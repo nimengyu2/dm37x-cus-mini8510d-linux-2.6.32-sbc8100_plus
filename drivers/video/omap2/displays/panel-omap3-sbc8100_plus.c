@@ -67,7 +67,7 @@ static struct omap_video_timings sbc8100_plus_panel_timings = {
 #endif
 #endif
 	.x_res          = 800,
-        .y_res          = 600,
+        .y_res          = 480,
 
         .hsw            = 3,   /* hsync_len (4) - 1 */
         .hfp            = 210,      /* right_margin (4) - 1 */

@@ -67,6 +67,7 @@
 #include <linux/dm9000.h>
 #include <linux/lierda_debug.h>
 #include <linux/can/platform/sja1000.h>
+#include <linux/i2c/tsc2007.h> // Modify by nmy
 
 #define GPMC_CS0_BASE  0x60
 #define GPMC_CS_SIZE   0x30
@@ -608,6 +609,88 @@ static struct i2c_board_info __initdata sbc8100_plus_i2c1_boardinfo[] = {
 	},
 };
 
+
+
+//----------------------------------------------------------------------------//
+//  nmy add tsc2007 code   start  2010-12-10  14:00
+//----------------------------------------------------------------------------//
+
+/*
+ * TSC 2007 Support
+ */
+#define TSC2007_GPIO_IRQ_PIN_TMP	38
+#define TSC2007_GPIO_IRQ_PIN	162
+
+static int tsc2007_init_irq(void)
+{
+	int ret = 0;
+        //pr_warning("%s: lierda_tcs2007_init_irq %d\n", __func__, ret);
+#if 1
+	omap_mux_init_gpio(TSC2007_GPIO_IRQ_PIN_TMP, OMAP_PIN_INPUT_PULLUP);
+
+	ret = gpio_request(TSC2007_GPIO_IRQ_PIN_TMP, "tsc2007-irq-tmp");
+	if (ret < 0) {
+		printk("%s: failed to TSC2007 IRQ GPIO: %d\n", __func__, ret);
+		return ret;
+	}
+	else
+	{
+		printk("%s: ok to TSC2007 IRQ GPIO: %d\n", __func__, ret);
+	}
+
+	gpio_direction_input(TSC2007_GPIO_IRQ_PIN_TMP);
+
+
+	omap_mux_init_gpio(TSC2007_GPIO_IRQ_PIN, OMAP_PIN_INPUT_PULLUP);
+
+	ret = gpio_request(TSC2007_GPIO_IRQ_PIN, "tsc2007-irq");
+	if (ret < 0) {
+		printk("%s: failed to TSC2007 IRQ GPIO: %d\n", __func__, ret);
+		return ret;
+	}
+	else
+	{
+		printk("%s: ok to TSC2007 IRQ GPIO: %d\n", __func__, ret);
+	}
+
+	gpio_direction_input(TSC2007_GPIO_IRQ_PIN);
+
+#endif
+#if 0
+	omap_mux_init_gpio(TSC2007_GPIO_IRQ_PIN, OMAP_PIN_OUTPUT);
+	//omap_mux_init_signal("sdrc_cke0", OMAP_PIN_OUTPUT);
+	gpio_request(TSC2007_GPIO_IRQ_PIN, "tsc2007");
+	gpio_direction_output(TSC2007_GPIO_IRQ_PIN,1);
+	gpio_set_value(TSC2007_GPIO_IRQ_PIN,1);
+#endif
+	return ret;
+}
+
+static void tsc2007_exit_irq(void)
+{
+	gpio_free(TSC2007_GPIO_IRQ_PIN);
+}
+
+static int tsc2007_get_irq_level(void)
+{
+	//pr_warning("%s: lierda_tsc2007_get_irq_level %d\n", __func__, 0);
+	lsd_ts_dbg(LSD_DBG,"enter tsc2007_get_irq_level\n");
+	return gpio_get_value(TSC2007_GPIO_IRQ_PIN) ? 0 : 1;
+}
+
+struct tsc2007_platform_data da850evm_tsc2007data = {
+	.model = 2007,
+	.x_plate_ohms = 180,
+	.get_pendown_state = tsc2007_get_irq_level,
+	.init_platform_hw = tsc2007_init_irq,
+	.exit_platform_hw = tsc2007_exit_irq,
+};
+
+//----------------------------------------------------------------------------//
+//  nmy add tsc2007 code   end  2010-12-10  14:00
+//----------------------------------------------------------------------------//
+
+
 #include <media/v4l2-int-device.h>
 
 #if defined(CONFIG_VIDEO_TVP514X) || defined(CONFIG_VIDEO_TVP514X_MODULE)
@@ -623,6 +706,7 @@ extern struct ov2656_platform_data sbc8100_plus_ov2656_platform_data;
 extern void sbc8100_plus_cam_init(void);
 
 static struct i2c_board_info __initdata sbc8100_plus_i2c2_boardinfo[] = {
+#if 0
 #if defined(CONFIG_VIDEO_TVP514X) || defined(CONFIG_VIDEO_TVP514X_MODULE)
        {
                I2C_BOARD_INFO("tvp5146m2", 0x5D),
@@ -635,17 +719,34 @@ static struct i2c_board_info __initdata sbc8100_plus_i2c2_boardinfo[] = {
                .platform_data = &sbc8100_plus_ov2656_platform_data,
        },
 #endif
+#endif
+       {
+	       I2C_BOARD_INFO("tsc2007", 0x48),
+	       .platform_data = &da850evm_tsc2007data,
+       },
+
+};
+
+
+static struct i2c_board_info __initdata sbc8100_plus_i2c3_boardinfo[] = {
+       {
+		I2C_BOARD_INFO("pcf8563", 0x51),
+	},
 };
 
 static int __init omap3_sbc8100_plus_i2c_init(void)
 {
+	sbc8100_plus_i2c2_boardinfo[0].irq = OMAP_GPIO_IRQ(TSC2007_GPIO_IRQ_PIN);
+	lsd_dbg(LSD_DBG,"tsc2007 irp=%d\n",OMAP_GPIO_IRQ(TSC2007_GPIO_IRQ_PIN));
+
 	omap_register_i2c_bus(1, 2600, sbc8100_plus_i2c1_boardinfo,
 			ARRAY_SIZE(sbc8100_plus_i2c1_boardinfo));
-	omap_register_i2c_bus(2, 400,  sbc8100_plus_i2c2_boardinfo,
+	omap_register_i2c_bus(2, 100,  sbc8100_plus_i2c2_boardinfo,
 				ARRAY_SIZE(sbc8100_plus_i2c2_boardinfo));
 	/* Bus 3 is attached to the DVI port where devices like the pico DLP
 	 * projector don't work reliably with 400kHz */
-	omap_register_i2c_bus(3, 100, NULL, 0);
+	omap_register_i2c_bus(3, 100, sbc8100_plus_i2c3_boardinfo, 
+				ARRAY_SIZE(sbc8100_plus_i2c3_boardinfo));
 	return 0;
 }
 
@@ -871,7 +972,8 @@ static const u32 gpmc_nor[7] = {
 
 static void __init omap3sbc8100_plus_init_sja1000(void)
 {
-	lsd_can_dbg(LSD_DBG,"enter func omap3sbc8100_plus_init_sja1000\n");	
+	lsd_can_dbg(LSD_DBG,"enter func omap3sbc8100_plus_init_sja1000\n");
+	lsd_can_dbg(LSD_DBG,"OMAP_GPIO_IRQ(OMAP_SJA1000_GPIO_IRQ)=%d\n",OMAP_GPIO_IRQ(OMAP_SJA1000_GPIO_IRQ));	
 	
 	omap_mux_init_gpio(OMAP_SJA1000_GPIO_IRQ, OMAP_PIN_INPUT_PULLUP);
 	//omap_mux_init_gpio(40, OMAP_PIN_INPUT);
@@ -1090,7 +1192,14 @@ static struct platform_device omap3sbc8100_plus_dm9000_device = {
 
 static void __init omap3sbc8100_plus_init_dm9000(void)
 {
+	omap_mux_init_gpio(OMAP_DM9000_GPIO_IRQ, OMAP_PIN_OUTPUT);
+	//omap_mux_init_signal("sdrc_cke0", OMAP_PIN_OUTPUT);
+	gpio_request(OMAP_DM9000_GPIO_IRQ, "dm9000");
+	gpio_direction_output(OMAP_DM9000_GPIO_IRQ,1);
+	gpio_set_value(OMAP_DM9000_GPIO_IRQ,1);
+
 	omap_mux_init_gpio(OMAP_DM9000_GPIO_IRQ, OMAP_PIN_INPUT_PULLUP);
+#if 0
         if (gpio_request(OMAP_DM9000_GPIO_IRQ, "dm9000 irq") < 0) {
                 printk(KERN_ERR "Failed to request GPIO%d for dm9000 IRQ\n",
                         OMAP_DM9000_GPIO_IRQ);
@@ -1101,6 +1210,7 @@ static void __init omap3sbc8100_plus_init_dm9000(void)
 	{
 		lsd_eth_dbg(LSD_OK,"gpio_request OMAP_DM9000_GPIO_IRQ ok\n");
 	}
+#endif
 
         gpio_direction_input(OMAP_DM9000_GPIO_IRQ);
 }
@@ -1129,7 +1239,7 @@ static void __init omap3_sbc8100_plus_init_irq(void)
 	omap2_gp_clockevent_set_gptimer(12);
 #endif
 	omap_gpio_init();
-	ads7846_dev_init();
+	//ads7846_dev_init();
 }
 
 static struct platform_device *omap3_sbc8100_plus_devices[] __initdata = {
@@ -1237,10 +1347,11 @@ static void __init omap3_sbc8100_plus_init(void)
 {
 	omap3_mux_init(board_mux, OMAP_PACKAGE_CBB);
 	omap3_sbc8100_plus_i2c_init();
+
 	platform_add_devices(omap3_sbc8100_plus_devices,
 			ARRAY_SIZE(omap3_sbc8100_plus_devices));
-        spi_register_board_info(omap3sbc8100_plus_spi_board_info,
-                                ARRAY_SIZE(omap3sbc8100_plus_spi_board_info));
+        //spi_register_board_info(omap3sbc8100_plus_spi_board_info,
+        //                        ARRAY_SIZE(omap3sbc8100_plus_spi_board_info));
 	omap_serial_init();
 
 	usb_musb_init();
@@ -1260,6 +1371,23 @@ static void __init omap3_sbc8100_plus_init(void)
 	omap3evm_android_gadget_init();
 #endif
 	sbc8100_plus_cam_init();	
+
+	// nmy add for gpio setting start
+	#if 1
+	omap_mux_init_gpio(24, OMAP_PIN_INPUT_PULLUP);
+	omap_mux_init_gpio(43, OMAP_PIN_INPUT_PULLUP);
+	omap_mux_init_gpio(26, OMAP_PIN_INPUT_PULLUP);
+	omap_mux_init_gpio(27, OMAP_PIN_INPUT_PULLUP);
+	omap_mux_init_gpio(28, OMAP_PIN_INPUT_PULLUP);
+	omap_mux_init_gpio(29, OMAP_PIN_INPUT_PULLUP);
+	omap_mux_init_gpio(136, OMAP_PIN_INPUT_PULLUP);
+	omap_mux_init_gpio(137, OMAP_PIN_INPUT_PULLUP);
+	omap_mux_init_gpio(138, OMAP_PIN_INPUT_PULLUP);
+	omap_mux_init_gpio(139, OMAP_PIN_INPUT_PULLUP);
+	omap_mux_init_gpio(173, OMAP_PIN_INPUT_PULLUP);
+	#endif
+	// nmy add for gpio setting end
+
 }
 static void __init omap3_sbc8100_plus_map_io(void)
 {

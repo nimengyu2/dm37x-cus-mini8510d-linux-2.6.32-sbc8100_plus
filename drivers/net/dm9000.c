@@ -1104,6 +1104,8 @@ static irqreturn_t dm9000_interrupt(int irq, void *dev_id)
 	int_status = ior(db, DM9000_ISR);	/* Got ISR */
 	iow(db, DM9000_ISR, int_status);	/* Clear ISR status */
 
+	lsd_eth_dbg(LSD_DBG,"int_status=0x%08x\n",int_status);
+
 	if (netif_msg_intr(db))
 		dev_dbg(db->dev, "interrupt status %02x\n", int_status);
 
@@ -1219,7 +1221,7 @@ dm9000_open(struct net_device *dev)
 	/* Init driver variable */
 	db->dbug_cnt = 0;
 
-	mdelay(10);
+	//mdelay(10);
 
 	mii_check_media(&db->mii, netif_msg_link(db), 1);
 	netif_start_queue(dev);

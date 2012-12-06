@@ -26,6 +26,7 @@
 #include <linux/interrupt.h>
 #include <linux/i2c.h>
 #include <linux/i2c/tsc2007.h>
+#include <linux/lierda_debug.h>
 
 #define TS_POLL_DELAY			1 /* ms delay between samples */
 #define TS_POLL_PERIOD			1 /* ms delay between samples */
@@ -159,6 +160,8 @@ static void tsc2007_work(struct work_struct *work)
 	struct ts_event tc;
 	u32 rt;
 
+	lsd_ts_dbg(LSD_DBG,"enter %s\n",__FUNCTION__);
+
 	/*
 	 * NOTE: We can't rely on the pressure to determine the pen down
 	 * state, even though this controller has a pressure sensor.
@@ -184,7 +187,8 @@ static void tsc2007_work(struct work_struct *work)
 	tsc2007_read_values(ts, &tc);
 
 	rt = tsc2007_calculate_pressure(ts, &tc);
-	if (rt > MAX_12BIT) {
+	//if (rt > MAX_12BIT) {
+	if (rt > 300) {
 		/*
 		 * Sample found inconsistent by debouncing or pressure is
 		 * beyond the maximum. Don't report it to user space,
@@ -235,6 +239,7 @@ static void tsc2007_work(struct work_struct *work)
 static irqreturn_t tsc2007_irq(int irq, void *handle)
 {
 	struct tsc2007 *ts = handle;
+	lsd_ts_dbg(LSD_DBG,"enter %s\n",__FUNCTION__);
 
 	if (!ts->get_pendown_state || likely(ts->get_pendown_state())) {
 		disable_irq_nosync(ts->irq);
@@ -269,14 +274,22 @@ static int __devinit tsc2007_probe(struct i2c_client *client,
 	struct input_dev *input_dev;
 	int err;
 
+	lsd_ts_dbg(LSD_DBG,"enter %s\n",__FUNCTION__);
+
 	if (!pdata) {
 		dev_err(&client->dev, "platform data is required!\n");
+		lsd_ts_dbg(LSD_ERR,"platform data is required failed!\n");
 		return -EINVAL;
+	}
+	else
+	{
+		lsd_ts_dbg(LSD_OK,"platform data is required ok!\n");
 	}
 
 	if (!i2c_check_functionality(client->adapter,
 				     I2C_FUNC_SMBUS_READ_WORD_DATA))
 		return -EIO;
+	lsd_ts_dbg(LSD_OK,"i2c_check_functionality ok\n");
 
 	ts = kzalloc(sizeof(struct tsc2007), GFP_KERNEL);
 	input_dev = input_allocate_device();
@@ -284,6 +297,7 @@ static int __devinit tsc2007_probe(struct i2c_client *client,
 		err = -ENOMEM;
 		goto err_free_mem;
 	}
+	lsd_ts_dbg(LSD_OK,"kzalloc ok\n");
 
 	ts->client = client;
 	ts->irq = client->irq;
@@ -297,6 +311,7 @@ static int __devinit tsc2007_probe(struct i2c_client *client,
 
 	snprintf(ts->phys, sizeof(ts->phys),
 		 "%s/input0", dev_name(&client->dev));
+	lsd_ts_dbg(LSD_OK,"ts->phys=%s ok\n",ts->phys);
 
 	input_dev->name = "TSC2007 Touchscreen";
 	input_dev->phys = ts->phys;
@@ -312,11 +327,17 @@ static int __devinit tsc2007_probe(struct i2c_client *client,
 	if (pdata->init_platform_hw)
 		pdata->init_platform_hw();
 
-	err = request_irq(ts->irq, tsc2007_irq, 0,
+	//err = request_irq(ts->irq, tsc2007_irq, 0,
+	 err = request_irq(ts->irq, tsc2007_irq, IRQF_TRIGGER_FALLING,
 			client->dev.driver->name, ts);
 	if (err < 0) {
 		dev_err(&client->dev, "irq %d busy?\n", ts->irq);
+		lsd_ts_dbg(LSD_ERR,"irq %d busy? failed\n", ts->irq);
 		goto err_free_mem;
+	}
+	else
+	{
+		lsd_ts_dbg(LSD_OK,"irq %d busy? ok\n", ts->irq);
 	}
 
 	/* Prepare for touch readings - power down ADC and enable PENIRQ */
@@ -346,7 +367,7 @@ static int __devexit tsc2007_remove(struct i2c_client *client)
 {
 	struct tsc2007	*ts = i2c_get_clientdata(client);
 	struct tsc2007_platform_data *pdata = client->dev.platform_data;
-
+	lsd_ts_dbg(LSD_DBG,"enter %s\n",__FUNCTION__);
 	tsc2007_free_irq(ts);
 
 	if (pdata->exit_platform_hw)
@@ -377,11 +398,13 @@ static struct i2c_driver tsc2007_driver = {
 
 static int __init tsc2007_init(void)
 {
+	lsd_ts_dbg(LSD_DBG,"enter %s\n",__FUNCTION__);
 	return i2c_add_driver(&tsc2007_driver);
 }
 
 static void __exit tsc2007_exit(void)
 {
+	lsd_ts_dbg(LSD_DBG,"enter %s\n",__FUNCTION__);
 	i2c_del_driver(&tsc2007_driver);
 }
 

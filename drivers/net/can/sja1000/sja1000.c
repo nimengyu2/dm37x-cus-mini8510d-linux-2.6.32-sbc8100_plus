@@ -539,6 +539,7 @@ static int sja1000_open(struct net_device *dev)
 		lsd_can_dbg(LSD_DBG,"no SJA1000_CUSTOM_IRQ_HANDLER\n");
 		err = request_irq(dev->irq, sja1000_interrupt, priv->irq_flags,
 				  dev->name, (void *)dev);
+		lsd_can_dbg(LSD_OK,"dev->irq=%d\n",dev->irq);
 		if (err) {
 			lsd_can_dbg(LSD_ERR,"request_irq error\n");
 			close_candev(dev);
