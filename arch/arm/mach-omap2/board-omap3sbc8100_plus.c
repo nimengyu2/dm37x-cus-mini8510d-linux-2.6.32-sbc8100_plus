@@ -706,13 +706,14 @@ extern struct ov2656_platform_data sbc8100_plus_ov2656_platform_data;
 extern void sbc8100_plus_cam_init(void);
 
 static struct i2c_board_info __initdata sbc8100_plus_i2c2_boardinfo[] = {
-#if 0
+
 #if defined(CONFIG_VIDEO_TVP514X) || defined(CONFIG_VIDEO_TVP514X_MODULE)
        {
                I2C_BOARD_INFO("tvp5146m2", 0x5D),
                .platform_data = &tvp5146_pdata,
        },
 #endif
+#if 0
 #if defined(CONFIG_VIDEO_OV2656) || defined(CONFIG_VIDEO_OV2656_MODULE)
        {
                I2C_BOARD_INFO("ov2656", OV2656_I2C_ADDR),
@@ -736,7 +737,7 @@ static struct i2c_board_info __initdata sbc8100_plus_i2c3_boardinfo[] = {
 
 static int __init omap3_sbc8100_plus_i2c_init(void)
 {
-	sbc8100_plus_i2c2_boardinfo[0].irq = OMAP_GPIO_IRQ(TSC2007_GPIO_IRQ_PIN);
+	sbc8100_plus_i2c2_boardinfo[1].irq = OMAP_GPIO_IRQ(TSC2007_GPIO_IRQ_PIN);
 	lsd_dbg(LSD_DBG,"tsc2007 irp=%d\n",OMAP_GPIO_IRQ(TSC2007_GPIO_IRQ_PIN));
 
 	omap_register_i2c_bus(1, 2600, sbc8100_plus_i2c1_boardinfo,
