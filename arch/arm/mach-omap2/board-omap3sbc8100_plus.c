@@ -1375,17 +1375,33 @@ static void __init omap3_sbc8100_plus_init(void)
 
 	// nmy add for gpio setting start
 	#if 1
-	omap_mux_init_gpio(24, OMAP_PIN_INPUT_PULLUP);
-	omap_mux_init_gpio(43, OMAP_PIN_INPUT_PULLUP);
-	omap_mux_init_gpio(26, OMAP_PIN_INPUT_PULLUP);
-	omap_mux_init_gpio(27, OMAP_PIN_INPUT_PULLUP);
-	omap_mux_init_gpio(28, OMAP_PIN_INPUT_PULLUP);
-	omap_mux_init_gpio(29, OMAP_PIN_INPUT_PULLUP);
-	omap_mux_init_gpio(136, OMAP_PIN_INPUT_PULLUP);
-	omap_mux_init_gpio(137, OMAP_PIN_INPUT_PULLUP);
-	omap_mux_init_gpio(138, OMAP_PIN_INPUT_PULLUP);
-	omap_mux_init_gpio(139, OMAP_PIN_INPUT_PULLUP);
-	omap_mux_init_gpio(173, OMAP_PIN_INPUT_PULLUP);
+	// key
+	omap_mux_init_gpio(24, OMAP_PIN_INPUT_PULLUP);   // KEY10
+	omap_mux_init_gpio(43, OMAP_PIN_INPUT_PULLUP);   // KEY9
+	omap_mux_init_gpio(26, OMAP_PIN_INPUT_PULLUP);   // KEY8
+	omap_mux_init_gpio(27, OMAP_PIN_INPUT_PULLUP);   // KEY7
+	omap_mux_init_gpio(28, OMAP_PIN_INPUT_PULLUP);   // KEY6
+	omap_mux_init_gpio(29, OMAP_PIN_INPUT_PULLUP);   // KEY5
+	omap_mux_init_gpio(136, OMAP_PIN_INPUT_PULLUP);  // KEY4
+	omap_mux_init_gpio(137, OMAP_PIN_INPUT_PULLUP);  // KEY3
+	omap_mux_init_gpio(138, OMAP_PIN_INPUT_PULLUP);  // KEY2
+	omap_mux_init_gpio(139, OMAP_PIN_INPUT_PULLUP);  // KEY1
+
+	omap_mux_init_gpio(173, OMAP_PIN_INPUT_PULLUP);  // 1V8_LED_INT
+	omap_mux_init_gpio(141, OMAP_PIN_OUTPUT);        // BL_EN
+	omap_mux_init_gpio(140, OMAP_PIN_OUTPUT);        // LED_EN
+	omap_mux_init_gpio(163, OMAP_PIN_OUTPUT);        // BUZ_EN	
+	omap_mux_init_gpio(160, OMAP_PIN_OUTPUT);	 // LED output
+	omap_mux_init_gpio(161, OMAP_PIN_OUTPUT);        // LED output
+	omap_mux_init_gpio(156, OMAP_PIN_OUTPUT);	 // relay1
+	omap_mux_init_gpio(157, OMAP_PIN_OUTPUT);        // relay2
+	omap_mux_init_gpio(158, OMAP_PIN_OUTPUT);        // relay3
+	omap_mux_init_gpio(149, OMAP_PIN_OUTPUT);        // relay4
+
+	omap_mux_init_gpio(98, OMAP_PIN_INPUT_PULLUP);   // IO_IN3
+	omap_mux_init_gpio(164, OMAP_PIN_INPUT_PULLUP);  // IO_IN2
+	omap_mux_init_gpio(170, OMAP_PIN_INPUT_PULLUP);  // IO_IN1
+	
 	#endif
 	// nmy add for gpio setting end
 
