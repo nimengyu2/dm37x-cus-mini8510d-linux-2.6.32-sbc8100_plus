@@ -791,15 +791,63 @@ static struct platform_device leds_gpio = {
 
 static struct gpio_keys_button gpio_buttons[] = {
         {
-                .code                   = KEY_F1/*KEY_MENU*/,
-                .gpio                   = 26,
-                .desc                   = "menu",
+                .code                   = KEY_0,
+                .gpio                   = 24,
+                .desc                   = "key10",
 		.active_low             = true,
         },
         {
-                .code                   = KEY_ESC/*KEY_BACK*/,
+                .code                   = KEY_9,
+                .gpio                   = 43,
+                .desc                   = "key9",
+                .active_low             = true,
+        },
+	{
+                .code                   = KEY_8,
+                .gpio                   = 26,
+                .desc                   = "key8",
+		.active_low             = true,
+        },
+        {
+                .code                   = KEY_7,
+                .gpio                   = 27,
+                .desc                   = "key7",
+                .active_low             = true,
+        },
+	{
+                .code                   = KEY_6,
+                .gpio                   = 28,
+                .desc                   = "key6",
+                .active_low             = true,
+        },
+        {
+                .code                   = KEY_5,
                 .gpio                   = 29,
-                .desc                   = "back",
+                .desc                   = "key5",
+                .active_low             = true,
+        },
+	{
+                .code                   = KEY_4,
+                .gpio                   = 136,
+                .desc                   = "key4",
+                .active_low             = true,
+        },
+        {
+                .code                   = KEY_3,
+                .gpio                   = 137,
+                .desc                   = "key3",
+                .active_low             = true,
+        },
+	{
+                .code                   = KEY_2,
+                .gpio                   = 138,
+                .desc                   = "key2",
+                .active_low             = true,
+        },
+	        {
+                .code                   = KEY_1,
+                .gpio                   = 139,
+                .desc                   = "key1",
                 .active_low             = true,
         },
 };

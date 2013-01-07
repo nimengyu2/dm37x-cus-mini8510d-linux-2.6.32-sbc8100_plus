@@ -28,6 +28,7 @@ extern int omap_mux_init_gpio(int gpio, int val);
 // 以下是要给到app测试的
 #define DEVICE_NAME "dm3730-gpio" //设备名(/dev/led) 
 #define MOTOR_MAGIC 'g'
+#if 0
 #define GET_KEY10			_IOW(MOTOR_MAGIC, 1,int) 
 #define GET_KEY9			_IOW(MOTOR_MAGIC, 2,int) 
 #define GET_KEY8			_IOW(MOTOR_MAGIC, 3,int) 
@@ -38,6 +39,7 @@ extern int omap_mux_init_gpio(int gpio, int val);
 #define GET_KEY3			_IOW(MOTOR_MAGIC, 8,int) 
 #define GET_KEY2			_IOW(MOTOR_MAGIC, 9,int) 
 #define GET_KEY1			_IOW(MOTOR_MAGIC, 10,int) 
+#endif
 #define GET_1V8_LED_INT			_IOW(MOTOR_MAGIC, 11,int) 
 #define SET_BL_EN			_IOW(MOTOR_MAGIC, 12,int) 
 #define SET_LED_EN			_IOW(MOTOR_MAGIC, 13,int) 
@@ -53,6 +55,7 @@ extern int omap_mux_init_gpio(int gpio, int val);
 #define GET_IOIN1			_IOW(MOTOR_MAGIC, 23,int) 
 
 // gpio setting
+#if 0
 #define GPIO_KEY10   		24
 #define GPIO_KEY9    		43
 #define GPIO_KEY8    		26
@@ -63,6 +66,7 @@ extern int omap_mux_init_gpio(int gpio, int val);
 #define GPIO_KEY3    		137
 #define GPIO_KEY2    		138
 #define GPIO_KEY1    		139
+#endif
 #define GPIO_1V8_LED_INT   	173
 #define GPIO_BL_EN   		141
 #define GPIO_LED_EN  		140
@@ -78,7 +82,7 @@ extern int omap_mux_init_gpio(int gpio, int val);
 #define GPIO_IOIN1   		170
 
 unsigned char gpio_input_array[] = {
-	GPIO_KEY10,
+	/*GPIO_KEY10,
 	GPIO_KEY9,
 	GPIO_KEY8,
 	GPIO_KEY7,
@@ -87,7 +91,7 @@ unsigned char gpio_input_array[] = {
 	GPIO_KEY4,
 	GPIO_KEY3,
 	GPIO_KEY2,
-	GPIO_KEY1,
+	GPIO_KEY1,*/
 	GPIO_1V8_LED_INT,
 	GPIO_IOIN3,
 	GPIO_IOIN2,
@@ -214,7 +218,7 @@ static int am1808_gpio_ioctl(
 		
 	
 		
-		
+		#if 0
 		case GET_KEY10:  
  		if(arg != 0)
 		{
@@ -305,6 +309,7 @@ static int am1808_gpio_ioctl(
 				*((unsigned long*)arg) = 1;
 		}
 		break;
+		#endif
 		case GET_1V8_LED_INT:  
  		if(arg != 0)
 		{
