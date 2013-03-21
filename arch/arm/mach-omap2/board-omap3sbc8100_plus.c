@@ -706,13 +706,6 @@ extern struct ov2656_platform_data sbc8100_plus_ov2656_platform_data;
 extern void sbc8100_plus_cam_init(void);
 
 static struct i2c_board_info __initdata sbc8100_plus_i2c2_boardinfo[] = {
-
-#if defined(CONFIG_VIDEO_TVP514X) || defined(CONFIG_VIDEO_TVP514X_MODULE)
-       {
-               I2C_BOARD_INFO("tvp5146m2", 0x5D),
-               .platform_data = &tvp5146_pdata,
-       },
-#endif
 #if 0
 #if defined(CONFIG_VIDEO_OV2656) || defined(CONFIG_VIDEO_OV2656_MODULE)
        {
@@ -733,11 +726,17 @@ static struct i2c_board_info __initdata sbc8100_plus_i2c3_boardinfo[] = {
        {
 		I2C_BOARD_INFO("pcf8563", 0x51),
 	},
+#if defined(CONFIG_VIDEO_TVP514X) || defined(CONFIG_VIDEO_TVP514X_MODULE)
+       {
+               I2C_BOARD_INFO("tvp5146m2", 0x5C),
+               .platform_data = &tvp5146_pdata,
+       },
+#endif
 };
 
 static int __init omap3_sbc8100_plus_i2c_init(void)
 {
-	sbc8100_plus_i2c2_boardinfo[1].irq = OMAP_GPIO_IRQ(TSC2007_GPIO_IRQ_PIN);
+	sbc8100_plus_i2c2_boardinfo[0].irq = OMAP_GPIO_IRQ(TSC2007_GPIO_IRQ_PIN);
 	lsd_dbg(LSD_DBG,"tsc2007 irp=%d\n",OMAP_GPIO_IRQ(TSC2007_GPIO_IRQ_PIN));
 
 	omap_register_i2c_bus(1, 2600, sbc8100_plus_i2c1_boardinfo,
@@ -1394,6 +1393,7 @@ static struct omap_board_mux board_mux[] __initdata = {
 
 static void __init omap3_sbc8100_plus_init(void)
 {
+	int ret;
 	omap3_mux_init(board_mux, OMAP_PACKAGE_CBB);
 	omap3_sbc8100_plus_i2c_init();
 
@@ -1452,6 +1452,18 @@ static void __init omap3_sbc8100_plus_init(void)
 	
 	#endif
 	// nmy add for gpio setting end
+
+	ret = gpio_request(167, "audio-en");
+	if (ret < 0) {
+		printk("%s: failed to audio-en: %d\n", __func__, ret);
+		return ret;
+	}
+	else
+	{
+		printk("%s: ok to audio-en: %d\n", __func__, ret);
+	}
+
+	gpio_direction_output(167,1);
 
 }
 static void __init omap3_sbc8100_plus_map_io(void)
