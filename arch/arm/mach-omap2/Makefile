@@ -3,7 +3,7 @@
 #
 
 # Common support
-obj-y := id.o io.o control.o mux.o devices.o serial.o gpmc.o timer-gp.o
+obj-y := id.o io.o control.o mux.o devices.o serial.o gpmc.o timer-gp.o gpmc-16c554.o
 
 omap-2-3-common				= irq.o sdrc.o omap_hwmod.o
 omap-3-4-common				= dpll.o

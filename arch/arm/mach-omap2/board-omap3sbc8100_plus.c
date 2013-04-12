@@ -67,6 +67,7 @@
 #include <linux/dm9000.h>
 #include <linux/lierda_debug.h>
 #include <linux/can/platform/sja1000.h>
+#include <plat/gpmc-16c554.h>
 #include <linux/i2c/tsc2007.h> // Modify by nmy
 
 #define GPMC_CS0_BASE  0x60
@@ -723,21 +724,24 @@ static struct i2c_board_info __initdata sbc8100_plus_i2c2_boardinfo[] = {
 
 
 static struct i2c_board_info __initdata sbc8100_plus_i2c3_boardinfo[] = {
+#if 0
        {
 		I2C_BOARD_INFO("pcf8563", 0x51),
 	},
+
 #if defined(CONFIG_VIDEO_TVP514X) || defined(CONFIG_VIDEO_TVP514X_MODULE)
        {
                I2C_BOARD_INFO("tvp5146m2", 0x5C),
                .platform_data = &tvp5146_pdata,
        },
 #endif
+#endif
 };
 
 static int __init omap3_sbc8100_plus_i2c_init(void)
 {
-	sbc8100_plus_i2c2_boardinfo[0].irq = OMAP_GPIO_IRQ(TSC2007_GPIO_IRQ_PIN);
-	lsd_dbg(LSD_DBG,"tsc2007 irp=%d\n",OMAP_GPIO_IRQ(TSC2007_GPIO_IRQ_PIN));
+	//sbc8100_plus_i2c2_boardinfo[0].irq = OMAP_GPIO_IRQ(TSC2007_GPIO_IRQ_PIN);
+	//lsd_dbg(LSD_DBG,"tsc2007 irp=%d\n",OMAP_GPIO_IRQ(TSC2007_GPIO_IRQ_PIN));
 
 	omap_register_i2c_bus(1, 2600, sbc8100_plus_i2c1_boardinfo,
 			ARRAY_SIZE(sbc8100_plus_i2c1_boardinfo));
@@ -1294,9 +1298,10 @@ static struct platform_device *omap3_sbc8100_plus_devices[] __initdata = {
 	&leds_gpio,
 	&keys_gpio,
 	&sbc8100_plus_dss_device,
-	&omap3sbc8100_plus_dm9000_device,
-	&pcm970_sja1000,
-	&pcm970_sja10002,
+	//&omap3sbc8100_plus_dm9000_device,
+	//&pcm970_sja1000,
+	//&pcm970_sja10002,
+	&st16c554_device,
 };
 
 static void __init omap3sbc8100_plus_flash_init(void)
@@ -1391,6 +1396,14 @@ static struct omap_board_mux board_mux[] __initdata = {
 #define board_mux	NULL
 #endif
 
+// nmy add for st16c554
+static struct omap_16c554_platform_data board_16c554_data = {
+	.cs		= 3,
+	//.gpio_irq	= 149,
+	//.flags		= GPMC_MUX_ADD_DATA | IORESOURCE_IRQ_LOWLEVEL,
+	.flags		= IORESOURCE_IRQ_LOWLEVEL,
+};
+
 static void __init omap3_sbc8100_plus_init(void)
 {
 	int ret;
@@ -1412,9 +1425,9 @@ static void __init omap3_sbc8100_plus_init(void)
 	//omap_mux_init_signal("sdrc_cke1", OMAP_PIN_OUTPUT);
 
 	omap3_sbc8100_plus_display_init();
-	omap3sbc8100_plus_init_dm9000();
-	omap3sbc8100_plus_init_sja1000();
-	omap3sbc8100_plus_init_sja10002();
+	//omap3sbc8100_plus_init_dm9000();
+	//omap3sbc8100_plus_init_sja1000();
+	//omap3sbc8100_plus_init_sja10002();
 
 #ifdef CONFIG_USB_ANDROID
 	omap3evm_android_gadget_init();
@@ -1422,7 +1435,7 @@ static void __init omap3_sbc8100_plus_init(void)
 	sbc8100_plus_cam_init();	
 
 	// nmy add for gpio setting start
-	#if 1
+	#if 0
 	// key
 	omap_mux_init_gpio(24, OMAP_PIN_INPUT_PULLUP);   // KEY10
 	omap_mux_init_gpio(43, OMAP_PIN_INPUT_PULLUP);   // KEY9
@@ -1464,6 +1477,22 @@ static void __init omap3_sbc8100_plus_init(void)
 	}
 
 	gpio_direction_output(167,1);
+
+
+	// for 16c554 uart interrupt
+	omap_mux_init_gpio(159, OMAP_PIN_INPUT);  // UARTA INT   mcbsp1_dr
+	omap_mux_init_gpio(160, OMAP_PIN_INPUT);  // UARTB INT  cam_shutter
+	omap_mux_init_gpio(184, OMAP_PIN_INPUT);  // UARTC INT  i2c3_scl
+	// 16c554 gpmc bus pin init
+	omap_mux_init_signal("gpmc_ncs4", OMAP_PIN_OUTPUT);                                           
+	omap_mux_init_signal("gpmc_ncs5", OMAP_PIN_OUTPUT);                                           
+	omap_mux_init_signal("gpmc_ncs6", OMAP_PIN_OUTPUT);   
+	omap_mux_init_signal("gpmc_a2", OMAP_PIN_OUTPUT); 
+	omap_mux_init_signal("gpmc_a3", OMAP_PIN_OUTPUT);                                         
+	omap_mux_init_signal("gpmc_a4", OMAP_PIN_OUTPUT);
+
+	// 16c554 init
+	gpmc_16c554_init(&board_16c554_data);
 
 }
 static void __init omap3_sbc8100_plus_map_io(void)

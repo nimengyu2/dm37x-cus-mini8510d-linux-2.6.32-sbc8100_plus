@@ -48,6 +48,8 @@
 #include "suncore.h"
 #endif
 
+int irq_temp;
+
 /*
  * Configuration:
  *   share_irqs - whether we pass IRQF_SHARED to request_irq().  This option
@@ -69,13 +71,13 @@ static unsigned int skip_txen_test; /* force skip of txen test at init time */
 /*
  * Debugging.
  */
-#if 0
+#if 1
 #define DEBUG_AUTOCONF(fmt...)	printk(fmt)
 #else
 #define DEBUG_AUTOCONF(fmt...)	do { } while (0)
 #endif
 
-#if 0
+#if 1
 #define DEBUG_INTR(fmt...)	printk(fmt)
 #else
 #define DEBUG_INTR(fmt...)	do { } while (0)
@@ -1487,6 +1489,7 @@ static void transmit_chars(struct uart_8250_port *up)
 	if (uart_circ_chars_pending(xmit) < WAKEUP_CHARS)
 		uart_write_wakeup(&up->port);
 
+	if(irq_temp != 74)
 	DEBUG_INTR("THRE...");
 
 	if (uart_circ_empty(xmit))
@@ -1527,7 +1530,7 @@ static void serial8250_handle_port(struct uart_8250_port *up)
 	spin_lock_irqsave(&up->port.lock, flags);
 
 	status = serial_inp(up, UART_LSR);
-
+	if(irq_temp != 74)
 	DEBUG_INTR("status = %x...", status);
 
 	if (status & (UART_LSR_DR | UART_LSR_BI))
@@ -1553,12 +1556,16 @@ static void serial8250_handle_port(struct uart_8250_port *up)
  * This means we need to loop through all ports. checking that they
  * don't have an interrupt pending.
  */
+
 static irqreturn_t serial8250_interrupt(int irq, void *dev_id)
 {
 	struct irq_info *i = dev_id;
 	struct list_head *l, *end = NULL;
 	int pass_counter = 0, handled = 0;
 
+	irq_temp = irq;
+
+	if(irq_temp != 74)
 	DEBUG_INTR("serial8250_interrupt(%d)...", irq);
 
 	spin_lock(&i->lock);
@@ -1604,7 +1611,7 @@ static irqreturn_t serial8250_interrupt(int irq, void *dev_id)
 	} while (l != end);
 
 	spin_unlock(&i->lock);
-
+	if(irq != 74)
 	DEBUG_INTR("end.\n");
 
 	return IRQ_RETVAL(handled);
